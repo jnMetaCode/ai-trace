@@ -17,8 +17,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License">
-  <img src="https://img.shields.io/badge/go-%3E%3D1.21-00ADD8.svg" alt="Go Version">
+  <img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/go-%3E%3D1.24-00ADD8.svg" alt="Go Version">
   <img src="https://img.shields.io/badge/node-%3E%3D20-339933.svg" alt="Node Version">
   <img src="https://img.shields.io/badge/python-%3E%3D3.9-3776AB.svg" alt="Python Version">
 </p>
@@ -43,7 +43,7 @@
 │                      AI-Trace 架构图                         │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│   你的应用 ──→ AI-Trace 网关 ──→ LLM (OpenAI/Ollama)        │
+│   你的应用 ──→ AI-Trace 网关 ──→ LLM (OpenAI/Claude/Gemini)  │
 │                      │                                      │
 │                      ▼                                      │
 │              ┌──────────────┐                               │
@@ -71,7 +71,7 @@
 - **防篡改存证** - 基于Merkle树的密码学哈希绑定
 - **三级存证体系** - internal(内部) / compliance(合规) / legal(法律)
 - **最小披露证明** - 只披露必要内容，保护其余数据
-- **OpenAI兼容API** - 一行代码即可接入
+- **多模型代理** - 支持 OpenAI、Claude、Gemini 等，一行代码即可接入
 - **开源验证器** - 独立离线验证
 
 ## 快速开始
@@ -198,6 +198,22 @@ response = client.chat.completions.create(
     messages=[{"role": "user", "content": "你好！"}]
 )
 # 现在每个请求都会自动存证！
+```
+
+### Claude 接入
+
+```python
+import anthropic
+client = anthropic.Anthropic(
+    api_key="sk-ant-...",
+    base_url="http://localhost:8006/api/v1"  # 只需加这一行
+)
+message = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "你好！"}]
+)
+# 每个请求都会自动存证！
 ```
 
 ## 存证级别

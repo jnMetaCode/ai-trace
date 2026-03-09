@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AI-Trace - Enterprise AI Decision Audit & Tamper-Proof Evidence System",
-  description: "Open source AI audit system with tamper-proof certificates. Merkle tree binding, blockchain anchoring, and minimal disclosure proofs for enterprise AI compliance.",
-  keywords: ["AI audit", "AI compliance", "LLM tracing", "AI governance", "Merkle tree", "blockchain"],
+  description: "Open source tamper-proof audit trail for LLM applications. Works with OpenAI, Claude, and Gemini. Merkle tree certificates, blockchain anchoring, and zero-knowledge proofs.",
+  keywords: ["AI audit", "AI compliance", "LLM tracing", "AI governance", "Merkle tree", "blockchain", "OpenAI", "Claude", "Gemini"],
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

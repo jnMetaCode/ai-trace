@@ -44,7 +44,7 @@ As AI becomes critical in enterprise decisions, organizations face growing chall
 │                      AI-Trace Architecture                   │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│   Your App ──→ AI-Trace Gateway ──→ LLM (OpenAI/Ollama)    │
+│   Your App ──→ AI-Trace Gateway ──→ LLM (OpenAI/Claude/Gemini) │
 │                      │                                      │
 │                      ▼                                      │
 │              ┌──────────────┐                               │
@@ -72,7 +72,7 @@ As AI becomes critical in enterprise decisions, organizations face growing chall
 - **Tamper-Proof Certificates** - Merkle tree binding with cryptographic hashes
 - **Three Evidence Levels** - internal / compliance (TSA+WORM) / legal (Blockchain)
 - **Minimal Disclosure Proofs** - Reveal only what's needed, protect the rest
-- **OpenAI Compatible API** - Drop-in replacement, one line change
+- **Multi-Provider Proxy** - Works with OpenAI, Claude, Gemini, and any OpenAI-compatible API
 - **Open Source Verifier** - Independent offline verification
 
 ## Quick Start
@@ -100,7 +100,7 @@ Access:
 
 ```bash
 # Prerequisites
-# - Go 1.21+
+# - Go 1.24+
 # - Node.js 20+
 # - PostgreSQL 15+
 # - Redis 7+
@@ -183,18 +183,28 @@ print(f"Valid: {result.valid}")
 ### OpenAI Drop-in Replacement
 
 ```python
-# Before (standard OpenAI)
-from openai import OpenAI
-client = OpenAI(api_key="sk-...")
-
-# After (with AI-Trace)
 from openai import OpenAI
 client = OpenAI(
     api_key="sk-...",
     base_url="http://localhost:8006/api/v1"  # Just add this line
 )
-
 # Your code stays exactly the same
+```
+
+### Anthropic Claude
+
+```python
+import anthropic
+client = anthropic.Anthropic(
+    api_key="sk-ant-...",
+    base_url="http://localhost:8006/api/v1"  # Just add this line
+)
+message = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+# Every request is traced & certified
 response = client.chat.completions.create(
     model="gpt-4",
     messages=[{"role": "user", "content": "Hello!"}]

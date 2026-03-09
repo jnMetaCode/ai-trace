@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Rounded square background -->
+  <rect width="512" height="512" rx="96" fill="#2563EB"/>
+  <!-- Shield shape -->
+  <path d="M256 80 L400 140 L400 280 Q400 380 256 440 Q112 380 112 280 L112 140 Z"
+        fill="none" stroke="#BFDBFE" stroke-width="16" stroke-linejoin="round" opacity="0.25"/>
+  <!-- Top node -->
+  <circle cx="256" cy="160" r="32" fill="none" stroke="#93C5FD" stroke-width="12"/>
+  <circle cx="256" cy="160" r="12" fill="#93C5FD"/>
+  <!-- Bottom left node -->
+  <circle cx="192" cy="300" r="32" fill="none" stroke="#93C5FD" stroke-width="12"/>
+  <circle cx="192" cy="300" r="12" fill="#93C5FD"/>
+  <!-- Bottom right node -->
+  <circle cx="320" cy="300" r="32" fill="none" stroke="#93C5FD" stroke-width="12"/>
+  <circle cx="320" cy="300" r="12" fill="#93C5FD"/>
+  <!-- Connecting lines -->
+  <line x1="240" y1="185" x2="205" y2="272" stroke="#93C5FD" stroke-width="8" stroke-linecap="round"/>
+  <line x1="272" y1="185" x2="307" y2="272" stroke="#93C5FD" stroke-width="8" stroke-linecap="round"/>
+  <line x1="224" y1="300" x2="288" y2="300" stroke="#93C5FD" stroke-width="8" stroke-linecap="round"/>
+  <!-- Checkmark -->
+  <path d="M240 370 L252 385 L280 355" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

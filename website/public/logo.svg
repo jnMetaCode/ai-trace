@@ -6,7 +6,7 @@
     </linearGradient>
   </defs>
   <rect width="32" height="32" rx="6" fill="url(#bg)"/>
-  <!-- Simplified chain/merkle tree nodes -->
+  <!-- Merkle tree nodes -->
   <circle cx="16" cy="9" r="2.5" fill="none" stroke="#93C5FD" stroke-width="1.2"/>
   <circle cx="16" cy="9" r="1" fill="#93C5FD"/>
   <circle cx="11" cy="19" r="2.5" fill="none" stroke="#93C5FD" stroke-width="1.2"/>

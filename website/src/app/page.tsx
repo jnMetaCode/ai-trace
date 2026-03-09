@@ -63,6 +63,7 @@ const ArrowIcon = () => (
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [activeProvider, setActiveProvider] = useState('OpenAI')
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -79,9 +80,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AT</span>
-              </div>
+              <img src="/logo.svg" alt="AI-Trace" className="w-8 h-8" />
               <span className="text-white font-semibold text-xl">AI-Trace</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
@@ -163,37 +162,83 @@ export default function Home() {
 
           {/* Trust badges */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-gray-400 text-sm mb-16">
-            {['OpenAI Compatible', 'Self-Hosted', 'Privacy First', '< 5 min setup'].map((t) => (
+            {['OpenAI / Claude / Gemini', 'Self-Hosted', 'Privacy First', '< 5 min setup'].map((t) => (
               <span key={t} className="flex items-center">
                 <CheckIcon /> {t}
               </span>
             ))}
           </div>
 
-          {/* Terminal widget */}
+          {/* Terminal widget with provider tabs */}
           <div className="max-w-3xl mx-auto">
             <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden shadow-2xl shadow-blue-500/5">
               <div className="flex items-center gap-2 px-4 py-3 bg-gray-900 border-b border-gray-800">
                 <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                <span className="ml-3 text-gray-500 text-xs font-mono">main.py</span>
+                <div className="ml-auto flex gap-1">
+                  {['OpenAI', 'Claude', 'Gemini'].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setActiveProvider(p)}
+                      className={`px-3 py-1 rounded text-xs font-mono transition ${activeProvider === p ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
               </div>
               <pre className="p-6 text-sm md:text-base overflow-x-auto text-left">
-                <code className="font-mono">
-                  <span className="text-blue-400">from</span> <span className="text-gray-300">openai</span> <span className="text-blue-400">import</span> <span className="text-gray-300">OpenAI</span>{'\n'}
-                  {'\n'}
-                  <span className="text-gray-300">client = OpenAI(</span>{'\n'}
-                  <span className="text-gray-300">    api_key=</span><span className="text-amber-300">&quot;sk-...&quot;</span><span className="text-gray-300">,</span>{'\n'}
-                  <span className="text-green-400 font-semibold">    base_url=&quot;https://your-domain/api/v1&quot;  # &larr; only change</span>{'\n'}
-                  <span className="text-gray-300">)</span>{'\n'}
-                  {'\n'}
-                  <span className="text-gray-500"># That&apos;s it. Every request is now traced &amp; certified.</span>{'\n'}
-                  <span className="text-gray-300">response = client.chat.completions.create(</span>{'\n'}
-                  <span className="text-gray-300">    model=</span><span className="text-amber-300">&quot;gpt-4&quot;</span><span className="text-gray-300">,</span>{'\n'}
-                  <span className="text-gray-300">    messages=[&#123;</span><span className="text-amber-300">&quot;role&quot;</span><span className="text-gray-300">: </span><span className="text-amber-300">&quot;user&quot;</span><span className="text-gray-300">, </span><span className="text-amber-300">&quot;content&quot;</span><span className="text-gray-300">: </span><span className="text-amber-300">&quot;Summarize this contract&quot;</span><span className="text-gray-300">&#125;]</span>{'\n'}
-                  <span className="text-gray-300">)</span>
-                </code>
+                {activeProvider === 'OpenAI' && (
+                  <code className="font-mono">
+                    <span className="text-blue-400">from</span> <span className="text-gray-300">openai</span> <span className="text-blue-400">import</span> <span className="text-gray-300">OpenAI</span>{'\n'}
+                    {'\n'}
+                    <span className="text-gray-300">client = OpenAI(</span>{'\n'}
+                    <span className="text-gray-300">    api_key=</span><span className="text-amber-300">&quot;sk-...&quot;</span><span className="text-gray-300">,</span>{'\n'}
+                    <span className="text-green-400 font-semibold">    base_url=&quot;https://your-domain/api/v1&quot;  # &larr; only change</span>{'\n'}
+                    <span className="text-gray-300">)</span>{'\n'}
+                    {'\n'}
+                    <span className="text-gray-500"># Every request is now traced &amp; certified.</span>{'\n'}
+                    <span className="text-gray-300">response = client.chat.completions.create(</span>{'\n'}
+                    <span className="text-gray-300">    model=</span><span className="text-amber-300">&quot;gpt-4o&quot;</span><span className="text-gray-300">,</span>{'\n'}
+                    <span className="text-gray-300">    messages=[&#123;</span><span className="text-amber-300">&quot;role&quot;</span><span className="text-gray-300">: </span><span className="text-amber-300">&quot;user&quot;</span><span className="text-gray-300">, </span><span className="text-amber-300">&quot;content&quot;</span><span className="text-gray-300">: </span><span className="text-amber-300">&quot;Summarize this contract&quot;</span><span className="text-gray-300">&#125;]</span>{'\n'}
+                    <span className="text-gray-300">)</span>
+                  </code>
+                )}
+                {activeProvider === 'Claude' && (
+                  <code className="font-mono">
+                    <span className="text-blue-400">import</span> <span className="text-gray-300">anthropic</span>{'\n'}
+                    {'\n'}
+                    <span className="text-gray-300">client = anthropic.Anthropic(</span>{'\n'}
+                    <span className="text-gray-300">    api_key=</span><span className="text-amber-300">&quot;sk-ant-...&quot;</span><span className="text-gray-300">,</span>{'\n'}
+                    <span className="text-green-400 font-semibold">    base_url=&quot;https://your-domain/api/v1&quot;  # &larr; only change</span>{'\n'}
+                    <span className="text-gray-300">)</span>{'\n'}
+                    {'\n'}
+                    <span className="text-gray-500"># Every request is now traced &amp; certified.</span>{'\n'}
+                    <span className="text-gray-300">message = client.messages.create(</span>{'\n'}
+                    <span className="text-gray-300">    model=</span><span className="text-amber-300">&quot;claude-sonnet-4-20250514&quot;</span><span className="text-gray-300">,</span>{'\n'}
+                    <span className="text-gray-300">    max_tokens=1024,</span>{'\n'}
+                    <span className="text-gray-300">    messages=[&#123;</span><span className="text-amber-300">&quot;role&quot;</span><span className="text-gray-300">: </span><span className="text-amber-300">&quot;user&quot;</span><span className="text-gray-300">, </span><span className="text-amber-300">&quot;content&quot;</span><span className="text-gray-300">: </span><span className="text-amber-300">&quot;Summarize this contract&quot;</span><span className="text-gray-300">&#125;]</span>{'\n'}
+                    <span className="text-gray-300">)</span>
+                  </code>
+                )}
+                {activeProvider === 'Gemini' && (
+                  <code className="font-mono">
+                    <span className="text-blue-400">from</span> <span className="text-gray-300">openai</span> <span className="text-blue-400">import</span> <span className="text-gray-300">OpenAI</span>{'\n'}
+                    {'\n'}
+                    <span className="text-gray-500"># Gemini supports OpenAI-compatible API</span>{'\n'}
+                    <span className="text-gray-300">client = OpenAI(</span>{'\n'}
+                    <span className="text-gray-300">    api_key=</span><span className="text-amber-300">&quot;AIza...&quot;</span><span className="text-gray-300">,</span>{'\n'}
+                    <span className="text-green-400 font-semibold">    base_url=&quot;https://your-domain/api/v1&quot;  # &larr; only change</span>{'\n'}
+                    <span className="text-gray-300">)</span>{'\n'}
+                    {'\n'}
+                    <span className="text-gray-500"># Every request is now traced &amp; certified.</span>{'\n'}
+                    <span className="text-gray-300">response = client.chat.completions.create(</span>{'\n'}
+                    <span className="text-gray-300">    model=</span><span className="text-amber-300">&quot;gemini-2.0-flash&quot;</span><span className="text-gray-300">,</span>{'\n'}
+                    <span className="text-gray-300">    messages=[&#123;</span><span className="text-amber-300">&quot;role&quot;</span><span className="text-gray-300">: </span><span className="text-amber-300">&quot;user&quot;</span><span className="text-gray-300">, </span><span className="text-amber-300">&quot;content&quot;</span><span className="text-gray-300">: </span><span className="text-amber-300">&quot;Summarize this contract&quot;</span><span className="text-gray-300">&#125;]</span>{'\n'}
+                    <span className="text-gray-300">)</span>
+                  </code>
+                )}
               </pre>
             </div>
           </div>
@@ -261,7 +306,7 @@ export default function Home() {
                 {
                   step: '1',
                   label: 'Proxy',
-                  desc: 'Point your OpenAI SDK at AI-Trace. It forwards requests to the LLM provider and captures the full interaction.',
+                  desc: 'Point your OpenAI / Claude / Gemini SDK at AI-Trace. It forwards requests to any LLM provider and captures the full interaction.',
                 },
                 {
                   step: '2',
@@ -371,8 +416,8 @@ export default function Home() {
                 {
                   icon: '🔌',
                   color: 'amber',
-                  title: 'OpenAI-Compatible API',
-                  desc: 'Drop-in replacement. Change base_url and you\'re done. Works with any SDK or tool that speaks the OpenAI API. Python, Node, curl — all supported.',
+                  title: 'Multi-Provider Proxy',
+                  desc: 'Works with OpenAI, Anthropic Claude, Google Gemini, and any OpenAI-compatible API. Change one line — base_url — and you\'re done. Python, Node, curl — all supported.',
                 },
                 {
                   icon: '✅',
@@ -543,7 +588,7 @@ export default function Home() {
                     { feature: 'Cryptographic signatures', ai: 'Ed25519', ls: 'No', ar: 'No', wb: 'No' },
                     { feature: 'Blockchain anchoring', ai: 'Optional', ls: 'No', ar: 'No', wb: 'No' },
                     { feature: 'Zero-knowledge proofs', ai: 'Yes', ls: 'No', ar: 'No', wb: 'No' },
-                    { feature: 'OpenAI-compatible proxy', ai: 'Yes', ls: 'SDK req.', ar: 'SDK req.', wb: 'SDK req.' },
+                    { feature: 'Multi-provider proxy (OpenAI/Claude/Gemini)', ai: 'Yes', ls: 'SDK req.', ar: 'SDK req.', wb: 'SDK req.' },
                     { feature: 'Self-hostable', ai: 'Yes', ls: 'No', ar: 'No', wb: 'No' },
                     { feature: 'Open source', ai: 'Apache 2.0', ls: 'Partial', ar: 'No', wb: 'No' },
                     { feature: 'EU AI Act traceability', ai: 'Designed for it', ls: 'No', ar: 'No', wb: 'No' },
@@ -712,9 +757,7 @@ export default function Home() {
             {/* Brand */}
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">AT</span>
-                </div>
+                <img src="/logo.svg" alt="AI-Trace" className="w-8 h-8" />
                 <span className="text-white font-semibold text-lg">AI-Trace</span>
               </div>
               <p className="text-gray-500 text-sm mb-6">Tamper-proof audit trails for AI.</p>

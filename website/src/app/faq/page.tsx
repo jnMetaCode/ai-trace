@@ -226,9 +226,7 @@ export default function FAQ() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AT</span>
-              </div>
+              <img src="/logo.svg" alt="AI-Trace" className="w-8 h-8" />
               <span className="text-white font-semibold text-xl">AI-Trace</span>
             </Link>
             <div className="hidden md:flex items-center space-x-8">
