@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=77.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-trace-sdk"
+version = "0.1.0"
+description = "Python SDK for AI-Trace: Enterprise AI Audit & Evidence System with Merkle tree certification, minimal disclosure proofs, and full-chain traceability."
+readme = "README.md"
+license = "MIT"
+authors = [
+    {name = "AI-Trace Team", email = "contact@ai-trace.dev"}
+]
+maintainers = [
+    {name = "AI-Trace Team", email = "contact@ai-trace.dev"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+keywords = ["ai", "audit", "trace", "llm", "merkle", "evidence", "openai", "compliance", "traceability", "certificate"]
+requires-python = ">=3.8"
+dependencies = [
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+]
+openai = [
+    "openai>=1.0.0",
+]
+all = [
+    "openai>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ai-trace/ai-trace"
+Documentation = "https://ai-trace.dev/docs"
+Repository = "https://github.com/ai-trace/ai-trace"
+Issues = "https://github.com/ai-trace/ai-trace/issues"
+Changelog = "https://github.com/ai-trace/ai-trace/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ai_trace = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

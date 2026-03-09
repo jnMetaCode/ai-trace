@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aitrace.cc/schema/event/v0.1",
+  "title": "AI-Trace Event Schema",
+  "description": "Schema for AI generation process events",
+  "type": "object",
+  "required": ["event_id", "trace_id", "event_type", "timestamp", "sequence", "tenant_id", "payload", "payload_hash", "event_hash"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "Unique event identifier",
+      "pattern": "^evt_[a-zA-Z0-9]+$"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Trace identifier linking related events",
+      "pattern": "^trc_[a-zA-Z0-9]+$"
+    },
+    "parent_event_id": {
+      "type": "string",
+      "description": "Parent event ID for nested calls"
+    },
+    "prev_event_hash": {
+      "type": "string",
+      "description": "Hash of the previous event in sequence",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": ["INPUT", "MODEL", "RETRIEVAL", "TOOL_CALL", "OUTPUT", "POST_EDIT"],
+      "description": "Type of the event"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Event sequence number within trace"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant identifier"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User identifier (may be anonymized)"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Session identifier"
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "business_id": { "type": "string" },
+        "business_type": { "type": "string" },
+        "department": { "type": "string" },
+        "client_ip": { "type": "string" },
+        "client_type": { "type": "string" }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific payload"
+    },
+    "payload_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "SHA256 hash of the payload"
+    },
+    "event_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "SHA256 hash of the entire event"
+    }
+  },
+  "definitions": {
+    "InputPayload": {
+      "type": "object",
+      "required": ["prompt_hash"],
+      "properties": {
+        "prompt_hash": { "type": "string" },
+        "prompt_length": { "type": "integer" },
+        "prompt_encrypted_ref": { "type": "string" },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "hash": { "type": "string" },
+              "size_bytes": { "type": "integer" },
+              "encrypted_ref": { "type": "string" }
+            }
+          }
+        },
+        "request_params": {
+          "type": "object",
+          "properties": {
+            "model_requested": { "type": "string" },
+            "temperature": { "type": "number" },
+            "max_tokens": { "type": "integer" },
+            "top_p": { "type": "number" }
+          }
+        }
+      }
+    },
+    "ModelPayload": {
+      "type": "object",
+      "required": ["model_id", "model_provider"],
+      "properties": {
+        "model_id": { "type": "string" },
+        "model_version": { "type": "string" },
+        "model_provider": { "type": "string" },
+        "actual_params": { "type": "object" },
+        "params_hash": { "type": "string" },
+        "system_prompt_hash": { "type": "string" },
+        "system_prompt_version": { "type": "string" },
+        "model_weights_hash": { "type": "string" },
+        "quantization": { "type": "string" }
+      }
+    },
+    "RetrievalPayload": {
+      "type": "object",
+      "required": ["query_hash", "knowledge_base_id", "retrieved_chunks"],
+      "properties": {
+        "query_hash": { "type": "string" },
+        "knowledge_base_id": { "type": "string" },
+        "knowledge_base_version": { "type": "string" },
+        "retrieved_chunks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "chunk_id": { "type": "string" },
+              "doc_id": { "type": "string" },
+              "chunk_hash": { "type": "string" },
+              "similarity_score": { "type": "number" },
+              "chunk_encrypted_ref": { "type": "string" }
+            }
+          }
+        },
+        "retrieval_method": { "type": "string" },
+        "top_k": { "type": "integer" },
+        "rerank_applied": { "type": "boolean" }
+      }
+    },
+    "OutputPayload": {
+      "type": "object",
+      "required": ["output_hash"],
+      "properties": {
+        "output_hash": { "type": "string" },
+        "output_length": { "type": "integer" },
+        "output_encrypted_ref": { "type": "string" },
+        "usage": {
+          "type": "object",
+          "properties": {
+            "prompt_tokens": { "type": "integer" },
+            "completion_tokens": { "type": "integer" },
+            "total_tokens": { "type": "integer" }
+          }
+        },
+        "finish_reason": { "type": "string" },
+        "latency_ms": { "type": "integer" },
+        "perceptual_hash": { "type": "string" },
+        "safety_check": {
+          "type": "object",
+          "properties": {
+            "passed": { "type": "boolean" },
+            "flagged_categories": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

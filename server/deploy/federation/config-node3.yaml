@@ -1,0 +1,57 @@
+# AI-Trace 联邦节点 3 配置
+# 节点角色: 审计/验证节点
+
+server:
+  port: 8006
+  mode: release
+
+database:
+  host: postgres
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: ai_trace_node3
+  sslmode: disable
+
+redis:
+  host: redis
+  port: 6379
+  password: ""
+  db: 2  # 使用不同的 Redis DB
+
+minio:
+  endpoint: minio:9000
+  access_key: minioadmin
+  secret_key: minioadmin
+  bucket: ai-trace-node3
+  use_ssl: false
+
+gateway:
+  openai:
+    base_url: https://api.openai.com/v1
+    api_key: ""
+  ollama:
+    base_url: http://ollama:11434
+  timeout: 120
+  max_retries: 3
+
+auth:
+  api_keys:
+    - node3-api-key-12345
+
+features:
+  blockchain_anchor: false
+  federated_nodes: true
+  metrics: true
+  reports: true
+
+anchor:
+  ethereum:
+    enabled: false
+
+  federated:
+    enabled: true
+    nodes:
+      - http://node1:8006   # 节点 1
+      - http://node2:8006   # 节点 2
+    min_confirmations: 2

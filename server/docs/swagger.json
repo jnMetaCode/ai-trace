@@ -1,0 +1,2767 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "AI-Trace - Enterprise AI Decision Audit \u0026 Compliance Platform\n\nAI-Trace 提供零代码侵入的 AI 调用追踪、存证和审计能力。\n支持 OpenAI、Claude、Ollama 等多种模型，用户可透传自己的 API Key，服务不存储任何敏感信息。\n\n## 特性\n- **零侵入集成**: 只需替换 API endpoint，无需修改代码\n- **API Key 透传**: 用户的 API Key 直接透传到上游，不存储\n- **自定义代理**: 支持用户指定自己的代理服务器\n- **多级存证**: internal(内部审计) / compliance(合规) / legal(法律效力)\n- **最小披露**: 基于 Merkle 树的选择性披露证明",
+        "title": "AI-Trace API",
+        "termsOfService": "https://aitrace.cc/terms",
+        "contact": {
+            "name": "AI-Trace Support",
+            "url": "https://aitrace.cc/support",
+            "email": "support@aitrace.cc"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "0.2.0"
+    },
+    "host": "localhost:8006",
+    "basePath": "/api/v1",
+    "paths": {
+        "/certs/commit": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "为指定的追踪生成存证证书，支持多级存证\n\n## 存证级别\n- **internal** (L1): Ed25519 签名，适合内部审计\n- **compliance** (L2): WORM 存储 + TSA 时间戳，适合合规要求\n- **legal** (L3): 区块链锚定，适合法律效力要求",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certificates"
+                ],
+                "summary": "生成存证证书",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "存证请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CommitCertRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "存证证书信息",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "追踪不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/certs/search": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "获取当前租户的存证证书列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certificates"
+                ],
+                "summary": "搜索存证证书",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量（最大100）",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "证书列表",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/certs/verify": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "验证存证证书的完整性和有效性\n\n## 验证项目\n- **hash_integrity**: 事件哈希与 Merkle 根匹配\n- **signature**: Ed25519 数字签名验证\n- **time_proof**: 时间证明验证\n- **anchor_proof**: 锚定证明验证（WORM/区块链）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certificates"
+                ],
+                "summary": "验证存证证书",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "验证请求（cert_id 或 root_hash 二选一）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.VerifyCertRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "验证结果",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "证书不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/certs/{cert_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据证书 ID 获取存证证书的完整信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certificates"
+                ],
+                "summary": "获取存证证书详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "证书 ID",
+                        "name": "cert_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "证书详情",
+                        "schema": {
+                            "$ref": "#/definitions/cert.Certificate"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "证书不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/certs/{cert_id}/prove": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "生成只包含必要信息的证明，支持选择性披露\n\n## 使用场景\n- 向第三方证明 AI 决策过程，而不暴露完整对话内容\n- 选择性披露特定事件和字段\n- 生成可独立验证的 Merkle 证明",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certificates"
+                ],
+                "summary": "生成最小披露证明",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "证书 ID",
+                        "name": "cert_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "证明请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.GenerateProofRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "最小披露证明",
+                        "schema": {
+                            "$ref": "#/definitions/cert.MinimalDisclosureProof"
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "证书不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/completions": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "代理 OpenAI/Claude/Ollama 聊天完成请求，同时记录追踪事件\n\n## API Key 透传\n用户的 API Key 通过以下方式传递，**不会被存储**：\n- `X-Upstream-API-Key` header（推荐）\n- `Authorization: Bearer sk-...` header（兼容模式）\n\n## 自定义代理\n可通过 `X-Upstream-Base-URL` 指定自己的代理服务器，避免 IP 封禁风险",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Gateway"
+                ],
+                "summary": "聊天完成（OpenAI 兼容）",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上游 API Key（OpenAI/Claude，透传不存储）",
+                        "name": "X-Upstream-API-Key",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "自定义上游代理 URL",
+                        "name": "X-Upstream-Base-URL",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "追踪 ID（可选，自动生成）",
+                        "name": "X-Trace-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "X-Session-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "业务 ID",
+                        "name": "X-Business-ID",
+                        "in": "header"
+                    },
+                    {
+                        "description": "聊天请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ChatCompletionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "聊天响应",
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ChatCompletionResponse"
+                        },
+                        "headers": {
+                            "X-Latency-Ms": {
+                                "type": "string",
+                                "description": "延迟毫秒数"
+                            },
+                            "X-Trace-ID": {
+                                "type": "string",
+                                "description": "追踪 ID"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/completions/stream": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "代理 LLM 流式请求，每个 chunk 实时存证并返回\n\n## 流式存证特性\n- 每个 chunk 生成独立的 CHUNK 事件\n- 累积哈希保证完整性（任意 chunk 被篡改可检测）\n- 实时返回 chunk 内容和存证信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "Gateway"
+                ],
+                "summary": "流式聊天完成（SSE）",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上游 API Key（OpenAI/Claude，透传不存储）",
+                        "name": "X-Upstream-API-Key",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "自定义上游代理 URL",
+                        "name": "X-Upstream-Base-URL",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "追踪 ID（可选，自动生成）",
+                        "name": "X-Trace-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "会话 ID",
+                        "name": "X-Session-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "业务 ID",
+                        "name": "X-Business-ID",
+                        "in": "header"
+                    },
+                    {
+                        "description": "聊天请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gateway.ChatCompletionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SSE stream",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "headers": {
+                            "X-Trace-ID": {
+                                "type": "string",
+                                "description": "追踪 ID"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/decrypt": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "解密已加密存储的 prompt 或 output 内容\n\n## 权限要求\n- 只有内容所有者或授权方可解密\n- 所有解密操作会被记录到审计日志",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Decrypt"
+                ],
+                "summary": "解密内容",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "解密请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.DecryptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "解密结果",
+                        "schema": {
+                            "$ref": "#/definitions/api.DecryptResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "内容未找到",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/decrypt/audit": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "获取指定内容的解密审计历史",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Decrypt"
+                ],
+                "summary": "获取解密审计日志",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "加密内容引用",
+                        "name": "encrypted_ref",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "返回数量限制",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "偏移量",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "审计日志",
+                        "schema": {
+                            "$ref": "#/definitions/api.DecryptAuditLogsResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "无权限",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/events/ingest": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "将事件批量写入追踪系统，用于 SDK 直接上报场景",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "批量写入事件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "租户 ID",
+                        "name": "X-Tenant-ID",
+                        "in": "header"
+                    },
+                    {
+                        "description": "事件列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.IngestEventsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "写入结果",
+                        "schema": {
+                            "$ref": "#/definitions/api.IngestEventsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/events/search": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据条件搜索追踪事件",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "搜索事件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "追踪 ID",
+                        "name": "trace_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "事件类型（INPUT/MODEL/OUTPUT）",
+                        "name": "event_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "开始时间（RFC3339 格式）",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束时间（RFC3339 格式）",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "事件列表",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/events/{event_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "根据事件 ID 获取单个事件的详细信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "获取事件详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "事件 ID",
+                        "name": "event_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "事件详情",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "事件不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/federated/confirm": {
+            "post": {
+                "description": "接收来自其他联邦节点的锚定确认请求",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Federation"
+                ],
+                "summary": "联邦确认请求",
+                "parameters": [
+                    {
+                        "description": "锚定请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/anchor.FederatedAnchorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "确认响应",
+                        "schema": {
+                            "$ref": "#/definitions/anchor.FederatedAnchorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "联邦功能未启用",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/federated/node/info": {
+            "get": {
+                "description": "获取当前联邦节点的信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Federation"
+                ],
+                "summary": "获取节点信息",
+                "responses": {
+                    "200": {
+                        "description": "节点信息",
+                        "schema": {
+                            "$ref": "#/definitions/api.NodeInfoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/federated/nodes": {
+            "get": {
+                "description": "获取已知的联邦节点列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Federation"
+                ],
+                "summary": "列出联邦节点",
+                "responses": {
+                    "200": {
+                        "description": "节点列表",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/federated/nodes/register": {
+            "post": {
+                "description": "向本节点注册一个新的联邦节点",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Federation"
+                ],
+                "summary": "注册联邦节点",
+                "parameters": [
+                    {
+                        "description": "节点信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.RegisterNodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "注册结果",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/federated/nodes/trust": {
+            "post": {
+                "description": "将一个联邦节点添加到信任列表，启用签名验证",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Federation"
+                ],
+                "summary": "信任联邦节点",
+                "parameters": [
+                    {
+                        "description": "节点信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.TrustNodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "操作结果",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/federated/nodes/trust/{node_id}": {
+            "delete": {
+                "description": "从信任列表移除一个联邦节点",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Federation"
+                ],
+                "summary": "取消信任联邦节点",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "节点 ID",
+                        "name": "node_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "操作结果",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/federated/nodes/trusted": {
+            "get": {
+                "description": "获取已信任的联邦节点列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Federation"
+                ],
+                "summary": "列出信任的联邦节点",
+                "responses": {
+                    "200": {
+                        "description": "信任节点列表",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/federated/verify/{anchor_id}": {
+            "get": {
+                "description": "验证指定的联邦锚定是否存在且有效",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Federation"
+                ],
+                "summary": "验证联邦锚定",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "锚定 ID",
+                        "name": "anchor_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "验证结果",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "锚定不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/fingerprints/compare": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "比较两个 trace 的推理行为指纹相似度",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fingerprint"
+                ],
+                "summary": "比较指纹相似度",
+                "parameters": [
+                    {
+                        "description": "比较请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.FingerprintCompareRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "比较结果",
+                        "schema": {
+                            "$ref": "#/definitions/api.FingerprintCompareResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "指纹未找到",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/fingerprints/verify": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "验证指定 trace 的指纹是否被篡改",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fingerprint"
+                ],
+                "summary": "验证指纹完整性",
+                "parameters": [
+                    {
+                        "description": "验证请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.FingerprintVerifyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "验证结果",
+                        "schema": {
+                            "$ref": "#/definitions/api.FingerprintVerifyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "指纹未找到",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/fingerprints/{trace_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "获取指定 trace_id 的完整 4 层推理行为指纹",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fingerprint"
+                ],
+                "summary": "获取推理行为指纹",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "追踪 ID",
+                        "name": "trace_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "指纹数据",
+                        "schema": {
+                            "$ref": "#/definitions/api.FingerprintResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "未找到",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/getting-started": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "返回 AI-Trace 快速入门指南，帮助新用户了解如何使用平台",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "快速入门",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "快速入门指南",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "返回服务的健康状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "健康检查",
+                "responses": {
+                    "200": {
+                        "description": "健康状态",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/health/detailed": {
+            "get": {
+                "description": "返回服务及所有依赖服务的健康状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "详细健康检查",
+                "responses": {
+                    "200": {
+                        "description": "详细健康状态",
+                        "schema": {
+                            "$ref": "#/definitions/api.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "服务不健康",
+                        "schema": {
+                            "$ref": "#/definitions/api.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/live": {
+            "get": {
+                "description": "检查服务是否存活",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "存活检查",
+                "responses": {
+                    "200": {
+                        "description": "服务存活",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/ready": {
+            "get": {
+                "description": "检查服务是否准备好接收流量",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "就绪检查",
+                "responses": {
+                    "200": {
+                        "description": "服务就绪",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "服务未就绪",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/generate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "生成 AI 决策审计报告，支持多种类型和格式\n\n## 报告类型\n- **audit**: 完整审计报告，包含所有追踪和证书详情\n- **compliance**: 合规性报告，重点关注证书验证状态\n- **summary**: 摘要报告，统计汇总信息\n\n## 输出格式\n- **json**: JSON 格式，适合程序处理\n- **html**: HTML 格式，适合直接查看和打印",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json",
+                    "text/html"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "生成审计报告",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "AI-Trace 平台 API Key",
+                        "name": "X-API-Key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "报告请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.GenerateReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "报告信息",
+                        "schema": {
+                            "$ref": "#/definitions/report.Report"
+                        }
+                    },
+                    "400": {
+                        "description": "请求无效",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "anchor.FederatedAnchorRequest": {
+            "type": "object",
+            "properties": {
+                "cert_id": {
+                    "type": "string"
+                },
+                "origin_node": {
+                    "type": "string"
+                },
+                "root_hash": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "anchor.FederatedAnchorResponse": {
+            "type": "object",
+            "properties": {
+                "accepted": {
+                    "type": "boolean"
+                },
+                "anchor_id": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "node_id": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CommitCertRequest": {
+            "description": "生成存证证书的请求体",
+            "type": "object",
+            "required": [
+                "trace_id"
+            ],
+            "properties": {
+                "evidence_level": {
+                    "description": "存证级别：internal/compliance/legal（或旧格式 L1/L2/L3）",
+                    "type": "string",
+                    "example": "internal"
+                },
+                "trace_id": {
+                    "description": "追踪 ID",
+                    "type": "string",
+                    "example": "trc_abc123"
+                }
+            }
+        },
+        "api.DecryptAuditLog": {
+            "type": "object",
+            "properties": {
+                "audit_log_id": {
+                    "type": "string"
+                },
+                "client_ip": {
+                    "type": "string"
+                },
+                "decrypted_at": {
+                    "type": "string"
+                },
+                "fail_reason": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "tenant_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.DecryptAuditLogsResponse": {
+            "type": "object",
+            "properties": {
+                "encrypted_ref": {
+                    "type": "string"
+                },
+                "logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.DecryptAuditLog"
+                    }
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.DecryptRequest": {
+            "type": "object",
+            "required": [
+                "content_type",
+                "encrypted_ref"
+            ],
+            "properties": {
+                "content_type": {
+                    "description": "prompt 或 output",
+                    "type": "string"
+                },
+                "encrypted_ref": {
+                    "description": "加密内容引用",
+                    "type": "string"
+                },
+                "trace_id": {
+                    "description": "可选的 trace_id",
+                    "type": "string"
+                }
+            }
+        },
+        "api.DecryptResponse": {
+            "type": "object",
+            "properties": {
+                "audit_log_id": {
+                    "description": "审计日志 ID",
+                    "type": "string"
+                },
+                "content": {
+                    "description": "解密后的内容",
+                    "type": "string"
+                },
+                "content_type": {
+                    "description": "内容类型",
+                    "type": "string"
+                },
+                "decrypted_at": {
+                    "description": "解密时间",
+                    "type": "string"
+                }
+            }
+        },
+        "api.DependencyStatus": {
+            "type": "object",
+            "properties": {
+                "last_check": {
+                    "type": "string"
+                },
+                "latency": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/api.HealthStatus"
+                }
+            }
+        },
+        "api.FingerprintCompareDetails": {
+            "type": "object",
+            "properties": {
+                "semantic_similarity": {
+                    "type": "number"
+                },
+                "statistical_similarity": {
+                    "type": "number"
+                },
+                "token_prob_similarity": {
+                    "type": "number"
+                }
+            }
+        },
+        "api.FingerprintCompareRequest": {
+            "type": "object",
+            "required": [
+                "trace_id_1",
+                "trace_id_2"
+            ],
+            "properties": {
+                "trace_id_1": {
+                    "type": "string"
+                },
+                "trace_id_2": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.FingerprintCompareResponse": {
+            "type": "object",
+            "properties": {
+                "conclusion": {
+                    "type": "string"
+                },
+                "details": {
+                    "$ref": "#/definitions/api.FingerprintCompareDetails"
+                },
+                "similarity": {
+                    "type": "number"
+                },
+                "trace_id_1": {
+                    "type": "string"
+                },
+                "trace_id_2": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.FingerprintResponse": {
+            "type": "object",
+            "properties": {
+                "fingerprint_hash": {
+                    "type": "string"
+                },
+                "fingerprint_id": {
+                    "type": "string"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "model_id": {
+                    "type": "string"
+                },
+                "model_provider": {
+                    "type": "string"
+                },
+                "semantic": {},
+                "statistical": {},
+                "token_probs": {},
+                "trace_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.FingerprintVerifyRequest": {
+            "type": "object",
+            "required": [
+                "trace_id"
+            ],
+            "properties": {
+                "fingerprint_hash": {
+                    "type": "string"
+                },
+                "trace_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.FingerprintVerifyResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "trace_id": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                },
+                "verified": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.GenerateProofRequest": {
+            "description": "生成最小披露证明的请求体",
+            "type": "object",
+            "properties": {
+                "disclose_events": {
+                    "description": "要披露的事件索引（如 [0, 2]）",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "disclose_fields": {
+                    "description": "要披露的字段（如 [\"output_hash\"]）",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "api.GenerateReportRequest": {
+            "description": "生成审计报告的请求体",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "cert_ids": {
+                    "description": "指定证书 ID 列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "end_time": {
+                    "description": "结束时间",
+                    "type": "string",
+                    "example": "2024-12-31"
+                },
+                "format": {
+                    "description": "输出格式: json/html",
+                    "type": "string",
+                    "example": "html"
+                },
+                "include_raw": {
+                    "description": "是否包含原始数据",
+                    "type": "boolean"
+                },
+                "start_time": {
+                    "description": "开始时间",
+                    "type": "string",
+                    "example": "2024-01-01"
+                },
+                "trace_ids": {
+                    "description": "指定追踪 ID 列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "description": "报告类型: audit/compliance/summary",
+                    "type": "string",
+                    "example": "audit"
+                }
+            }
+        },
+        "api.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "dependencies": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/api.DependencyStatus"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/api.HealthStatus"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "uptime": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.HealthStatus": {
+            "type": "string",
+            "enum": [
+                "healthy",
+                "degraded",
+                "unhealthy"
+            ],
+            "x-enum-varnames": [
+                "HealthStatusHealthy",
+                "HealthStatusDegraded",
+                "HealthStatusUnhealthy"
+            ]
+        },
+        "api.IngestEventResult": {
+            "description": "单个事件的写入结果",
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "错误信息（如有）",
+                    "type": "string",
+                    "example": "duplicate event_id"
+                },
+                "event_hash": {
+                    "description": "事件哈希",
+                    "type": "string",
+                    "example": "sha256:abcd1234..."
+                },
+                "event_id": {
+                    "description": "事件 ID",
+                    "type": "string",
+                    "example": "evt_abc123"
+                }
+            }
+        },
+        "api.IngestEventsRequest": {
+            "type": "object"
+        },
+        "api.IngestEventsResponse": {
+            "description": "事件写入的响应结果",
+            "type": "object",
+            "properties": {
+                "results": {
+                    "description": "各事件的写入结果",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.IngestEventResult"
+                    }
+                },
+                "success": {
+                    "description": "是否成功",
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "api.NodeInfoResponse": {
+            "type": "object",
+            "properties": {
+                "endpoints": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "node_id": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.RegisterNodeRequest": {
+            "type": "object",
+            "required": [
+                "endpoint"
+            ],
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.TrustNodeRequest": {
+            "type": "object",
+            "required": [
+                "node_id",
+                "public_key"
+            ],
+            "properties": {
+                "node_id": {
+                    "type": "string"
+                },
+                "public_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.VerifyCertRequest": {
+            "description": "验证存证证书的请求体",
+            "type": "object",
+            "properties": {
+                "cert_id": {
+                    "description": "证书 ID",
+                    "type": "string",
+                    "example": "cert_abc123"
+                },
+                "root_hash": {
+                    "description": "Merkle 根哈希",
+                    "type": "string",
+                    "example": "sha256:abcd1234"
+                }
+            }
+        },
+        "cert.AnchorProof": {
+            "type": "object",
+            "properties": {
+                "anchor_id": {
+                    "type": "string"
+                },
+                "anchor_timestamp": {
+                    "type": "string"
+                },
+                "anchor_type": {
+                    "description": "local, worm, blockchain",
+                    "type": "string"
+                },
+                "blockchain": {
+                    "$ref": "#/definitions/cert.BlockchainProof"
+                },
+                "object_key": {
+                    "type": "string"
+                },
+                "storage_provider": {
+                    "type": "string"
+                }
+            }
+        },
+        "cert.BlockchainProof": {
+            "type": "object",
+            "properties": {
+                "block_height": {
+                    "type": "integer"
+                },
+                "chain_id": {
+                    "type": "string"
+                },
+                "contract_address": {
+                    "type": "string"
+                },
+                "tx_hash": {
+                    "type": "string"
+                }
+            }
+        },
+        "cert.CertMetadata": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "evidence_level": {
+                    "$ref": "#/definitions/cert.EvidenceLevel"
+                },
+                "public_key": {
+                    "description": "Ed25519公钥（用于验证签名）",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "cert.Certificate": {
+            "type": "object",
+            "properties": {
+                "anchor_proof": {
+                    "description": "锚定证明",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cert.AnchorProof"
+                        }
+                    ]
+                },
+                "cert_id": {
+                    "description": "存证标识",
+                    "type": "string"
+                },
+                "cert_version": {
+                    "type": "string"
+                },
+                "disclosure_policy": {
+                    "description": "披露策略",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cert.DisclosurePolicy"
+                        }
+                    ]
+                },
+                "event_hashes": {
+                    "description": "事件哈希列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "merkle_tree": {
+                    "description": "Merkle树",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/merkle.Tree"
+                        }
+                    ]
+                },
+                "metadata": {
+                    "description": "元信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cert.CertMetadata"
+                        }
+                    ]
+                },
+                "root_hash": {
+                    "type": "string"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "time_proof": {
+                    "description": "时间证明",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cert.TimeProof"
+                        }
+                    ]
+                },
+                "trace_id": {
+                    "description": "关联的trace",
+                    "type": "string"
+                }
+            }
+        },
+        "cert.DisclosedEvent": {
+            "type": "object",
+            "properties": {
+                "disclosed_fields": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "event_hash": {
+                    "type": "string"
+                },
+                "event_index": {
+                    "type": "integer"
+                },
+                "event_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "cert.DisclosurePolicy": {
+            "type": "object",
+            "properties": {
+                "allowed_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "encrypted_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "masked_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "policy_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "cert.EventMerkleProof": {
+            "type": "object",
+            "properties": {
+                "event_hash": {
+                    "type": "string"
+                },
+                "event_index": {
+                    "type": "integer"
+                },
+                "proof_path": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/merkle.ProofNode"
+                    }
+                }
+            }
+        },
+        "cert.EvidenceLevel": {
+            "type": "string",
+            "enum": [
+                "internal",
+                "compliance",
+                "legal",
+                "internal",
+                "compliance",
+                "legal"
+            ],
+            "x-enum-comments": {
+                "EvidenceLevelL1": "Legacy L1 -\u003e internal",
+                "EvidenceLevelL2": "Legacy L2 -\u003e compliance",
+                "EvidenceLevelL3": "Legacy L3 -\u003e legal"
+            },
+            "x-enum-descriptions": [
+                "Legacy L1 -\u003e internal",
+                "Legacy L2 -\u003e compliance",
+                "Legacy L3 -\u003e legal",
+                "",
+                "",
+                ""
+            ],
+            "x-enum-varnames": [
+                "EvidenceLevelL1",
+                "EvidenceLevelL2",
+                "EvidenceLevelL3",
+                "EvidenceLevelInternal",
+                "EvidenceLevelCompliance",
+                "EvidenceLevelLegal"
+            ]
+        },
+        "cert.MinimalDisclosureProof": {
+            "type": "object",
+            "properties": {
+                "anchor_proof": {
+                    "description": "锚定证明",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cert.AnchorProof"
+                        }
+                    ]
+                },
+                "cert_id": {
+                    "description": "证明目标",
+                    "type": "string"
+                },
+                "disclosed_events": {
+                    "description": "披露的事件",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cert.DisclosedEvent"
+                    }
+                },
+                "merkle_proofs": {
+                    "description": "Merkle证明",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cert.EventMerkleProof"
+                    }
+                },
+                "root_hash": {
+                    "type": "string"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "time_proof": {
+                    "description": "时间证明",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cert.TimeProof"
+                        }
+                    ]
+                },
+                "verification_instructions": {
+                    "description": "验证指引",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/cert.VerificationInstructions"
+                        }
+                    ]
+                }
+            }
+        },
+        "cert.TimeProof": {
+            "type": "object",
+            "properties": {
+                "proof_type": {
+                    "description": "local, ntp, tsa",
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "tsa_authority": {
+                    "type": "string"
+                },
+                "tsa_cert_chain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tsa_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "cert.VerificationInstructions": {
+            "type": "object",
+            "properties": {
+                "verifier_url": {
+                    "type": "string"
+                },
+                "verify_command": {
+                    "type": "string"
+                }
+            }
+        },
+        "event.EventContext": {
+            "type": "object",
+            "properties": {
+                "business_id": {
+                    "type": "string"
+                },
+                "business_type": {
+                    "type": "string"
+                },
+                "client_ip": {
+                    "type": "string"
+                },
+                "client_type": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                }
+            }
+        },
+        "event.EventType": {
+            "type": "string",
+            "enum": [
+                "INPUT",
+                "MODEL",
+                "RETRIEVAL",
+                "TOOL_CALL",
+                "CHUNK",
+                "OUTPUT",
+                "POST_EDIT"
+            ],
+            "x-enum-comments": {
+                "EventTypeChunk": "流式chunk事件"
+            },
+            "x-enum-descriptions": [
+                "",
+                "",
+                "",
+                "",
+                "流式chunk事件",
+                "",
+                ""
+            ],
+            "x-enum-varnames": [
+                "EventTypeInput",
+                "EventTypeModel",
+                "EventTypeRetrieval",
+                "EventTypeToolCall",
+                "EventTypeChunk",
+                "EventTypeOutput",
+                "EventTypePostEdit"
+            ]
+        },
+        "gateway.ChatCompletionRequest": {
+            "type": "object",
+            "properties": {
+                "max_tokens": {
+                    "type": "integer"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gateway.ChatMessage"
+                    }
+                },
+                "model": {
+                    "type": "string"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "stream": {
+                    "type": "boolean"
+                },
+                "temperature": {
+                    "type": "number"
+                },
+                "top_p": {
+                    "type": "number"
+                }
+            }
+        },
+        "gateway.ChatCompletionResponse": {
+            "type": "object",
+            "properties": {
+                "choices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gateway.Choice"
+                    }
+                },
+                "created": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "object": {
+                    "type": "string"
+                },
+                "usage": {
+                    "$ref": "#/definitions/gateway.Usage"
+                }
+            }
+        },
+        "gateway.ChatMessage": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "gateway.Choice": {
+            "type": "object",
+            "properties": {
+                "finish_reason": {
+                    "type": "string"
+                },
+                "index": {
+                    "type": "integer"
+                },
+                "message": {
+                    "$ref": "#/definitions/gateway.ChatMessage"
+                }
+            }
+        },
+        "gateway.Usage": {
+            "type": "object",
+            "properties": {
+                "completion_tokens": {
+                    "type": "integer"
+                },
+                "prompt_tokens": {
+                    "type": "integer"
+                },
+                "total_tokens": {
+                    "type": "integer"
+                }
+            }
+        },
+        "merkle.ProofNode": {
+            "type": "object",
+            "properties": {
+                "hash": {
+                    "type": "string"
+                },
+                "position": {
+                    "description": "\"left\" or \"right\"",
+                    "type": "string"
+                }
+            }
+        },
+        "merkle.Tree": {
+            "type": "object",
+            "properties": {
+                "algorithm": {
+                    "type": "string"
+                },
+                "leaves": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "root": {
+                    "type": "string"
+                }
+            }
+        },
+        "report.CertDetail": {
+            "type": "object",
+            "properties": {
+                "cert_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "evidence_level": {
+                    "type": "string"
+                },
+                "root_hash": {
+                    "type": "string"
+                },
+                "trace_id": {
+                    "type": "string"
+                },
+                "verified": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "report.Details": {
+            "type": "object",
+            "properties": {
+                "certificates": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/report.CertDetail"
+                    }
+                },
+                "traces": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/report.TraceDetail"
+                    }
+                },
+                "verifications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/report.Verification"
+                    }
+                }
+            }
+        },
+        "report.Report": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "details": {
+                    "$ref": "#/definitions/report.Details"
+                },
+                "format": {
+                    "$ref": "#/definitions/report.ReportFormat"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "summary": {
+                    "$ref": "#/definitions/report.Summary"
+                },
+                "tenant_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/report.ReportType"
+                }
+            }
+        },
+        "report.ReportFormat": {
+            "type": "string",
+            "enum": [
+                "json",
+                "html",
+                "pdf"
+            ],
+            "x-enum-comments": {
+                "ReportFormatPDF": "需要额外依赖"
+            },
+            "x-enum-descriptions": [
+                "",
+                "",
+                "需要额外依赖"
+            ],
+            "x-enum-varnames": [
+                "ReportFormatJSON",
+                "ReportFormatHTML",
+                "ReportFormatPDF"
+            ]
+        },
+        "report.ReportType": {
+            "type": "string",
+            "enum": [
+                "audit",
+                "compliance",
+                "summary"
+            ],
+            "x-enum-comments": {
+                "ReportTypeAudit": "审计报告",
+                "ReportTypeCompliance": "合规报告",
+                "ReportTypeSummary": "摘要报告"
+            },
+            "x-enum-descriptions": [
+                "审计报告",
+                "合规报告",
+                "摘要报告"
+            ],
+            "x-enum-varnames": [
+                "ReportTypeAudit",
+                "ReportTypeCompliance",
+                "ReportTypeSummary"
+            ]
+        },
+        "report.Summary": {
+            "type": "object",
+            "properties": {
+                "certs_by_level": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "events_by_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "time_range": {
+                    "$ref": "#/definitions/report.TimeRange"
+                },
+                "token_usage": {
+                    "$ref": "#/definitions/report.TokenUsage"
+                },
+                "total_certificates": {
+                    "type": "integer"
+                },
+                "total_events": {
+                    "type": "integer"
+                },
+                "total_traces": {
+                    "type": "integer"
+                }
+            }
+        },
+        "report.TimeRange": {
+            "type": "object",
+            "properties": {
+                "end": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string"
+                }
+            }
+        },
+        "report.TokenUsage": {
+            "type": "object",
+            "properties": {
+                "total_completion_tokens": {
+                    "type": "integer"
+                },
+                "total_prompt_tokens": {
+                    "type": "integer"
+                },
+                "total_tokens": {
+                    "type": "integer"
+                }
+            }
+        },
+        "report.TraceDetail": {
+            "type": "object",
+            "properties": {
+                "cert_id": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "event_count": {
+                    "type": "integer"
+                },
+                "has_cert": {
+                    "type": "boolean"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "trace_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "report.Verification": {
+            "type": "object",
+            "properties": {
+                "anchor_verified": {
+                    "type": "boolean"
+                },
+                "cert_id": {
+                    "type": "string"
+                },
+                "hash_integrity": {
+                    "type": "boolean"
+                },
+                "overall_valid": {
+                    "type": "boolean"
+                },
+                "signature_valid": {
+                    "type": "boolean"
+                },
+                "verified_at": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "AI-Trace 平台 API Key（用于认证）",
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        },
+        "UpstreamApiKey": {
+            "description": "用户的上游 API Key（OpenAI/Claude，透传不存储）",
+            "type": "apiKey",
+            "name": "X-Upstream-API-Key",
+            "in": "header"
+        }
+    }
+}

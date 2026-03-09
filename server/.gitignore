@@ -1,0 +1,82 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+ai-trace
+ai-trace-server
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+coverage.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment and config
+.env
+.env.local
+.env.*.local
+config.yaml
+!config.yaml.example
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Vendor (if not committing)
+# vendor/
+
+# Air live reload
+.air.toml
+
+# Build artifacts
+dist/
+
+# Python SDK
+sdk/python/__pycache__/
+sdk/python/*.egg-info/
+sdk/python/.eggs/
+sdk/python/dist/
+sdk/python/build/
+sdk/python/.pytest_cache/
+sdk/python/.mypy_cache/
+sdk/python/.ruff_cache/
+sdk/python/venv/
+sdk/python/.venv/
+
+# Node.js SDK (if added)
+sdk/javascript/node_modules/
+sdk/javascript/dist/
+
+# Database files
+*.db
+*.sqlite
+
+# Keys and secrets
+*.pem
+*.key
+*.crt
+!deploy/*.crt
+!deploy/*.key
+
+# MinIO data
+minio-data/

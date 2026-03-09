@@ -1,0 +1,147 @@
+# AI-Trace Configuration Example
+# Copy this file to config.yaml and modify as needed
+# Environment variables with AI_TRACE_ prefix can override these settings
+
+# Deployment Mode
+# - "simple": SQLite only, no external dependencies (great for getting started)
+# - "standard": PostgreSQL + Redis + MinIO (production)
+deploy_mode: simple  # simple, standard
+
+server:
+  port: 8006
+  host: "0.0.0.0"
+  mode: debug  # debug, release, test
+
+# SQLite Database (Simple Mode)
+sqlite:
+  path: ./data/ai-trace.db
+
+# PostgreSQL Database
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: ai_trace
+  sslmode: disable
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: 5m
+
+# Redis Cache
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 10
+
+# MinIO Object Storage
+minio:
+  endpoint: localhost:9000
+  access_key: minioadmin
+  secret_key: minioadmin
+  bucket: ai-trace
+  use_ssl: false
+
+# AI Gateway Configuration
+gateway:
+  openai:
+    base_url: https://api.openai.com/v1
+    api_key: ""  # Set via OPENAI_API_KEY environment variable
+  anthropic:
+    base_url: https://api.anthropic.com/v1
+    api_key: ""  # Set via ANTHROPIC_API_KEY environment variable
+  ollama:
+    base_url: http://localhost:11434
+  timeout: 120  # seconds
+  max_retries: 3
+  retry_delay: 1s
+
+# Authentication
+auth:
+  enabled: true
+  api_keys:
+    - your-api-key-here  # Change this in production!
+  jwt:
+    secret: ""  # Set via AI_TRACE_JWT_SECRET
+    expiry: 24h
+
+# Feature Flags
+features:
+  blockchain_anchor: false
+  federated_nodes: false
+  metrics: true
+  reports: true
+  batch_processing: true
+
+# Evidence Level Configuration
+evidence:
+  # internal - Local Signature (default)
+  # Best for: Development, testing, internal audit
+  internal:
+    enabled: true
+
+  # compliance - WORM Storage + TSA
+  # Best for: SOC2, GDPR, HIPAA, financial regulations
+  compliance:
+    enabled: true
+    tsa_url: http://timestamp.digicert.com
+    worm_retention_days: 2555  # 7 years
+
+  # legal - Blockchain Anchor
+  # Best for: Legal disputes, contracts, court evidence
+  legal:
+    enabled: false
+    chain: ethereum  # ethereum, polygon, arbitrum
+    rpc_url: ""
+    private_key: ""  # Set via AI_TRACE_BLOCKCHAIN_KEY
+    contract_address: ""
+    batch_size: 100
+    batch_interval: 1h
+
+# Auto-Certificate Configuration
+# Automatically generate certificates based on model or token thresholds
+auto_cert:
+  enabled: false
+  default_level: internal  # internal, compliance, legal
+  models:
+    - gpt-4
+    - claude-3-opus
+  min_tokens: 1000  # Auto-cert for responses with 1000+ tokens
+
+# Merkle Tree Configuration
+merkle:
+  hash_algorithm: sha256
+  incremental: true
+  checkpoint_interval: 1000
+
+# Logging
+logging:
+  level: info  # debug, info, warn, error
+  format: json  # json, console
+  output: stdout  # stdout, file
+  file_path: logs/ai-trace.log
+  max_size: 100  # MB
+  max_backups: 3
+  max_age: 30  # days
+
+# Rate Limiting
+rate_limit:
+  enabled: true
+  requests_per_minute: 100
+  burst: 20
+
+# CORS Configuration
+cors:
+  enabled: true
+  allowed_origins:
+    - "*"
+  allowed_methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed_headers:
+    - "*"

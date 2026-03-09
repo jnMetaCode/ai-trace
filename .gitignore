@@ -1,0 +1,65 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Vendor
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.local
+
+# Logs
+*.log
+logs/
+
+# Build
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Java
+*.class
+target/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+*.egg
+
+# Temp
+tmp/
+temp/
+
+# Internal docs (not for public repo)
+doc/
+
+# Docker volumes (local)
+postgres_data/
+redis_data/
+minio_data/

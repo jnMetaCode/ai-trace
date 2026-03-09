@@ -1,0 +1,59 @@
+{
+  "name": "@ai-trace/sdk",
+  "version": "1.0.0",
+  "description": "Official JavaScript/TypeScript SDK for the AI-Trace platform - Enterprise AI decision auditing and tamper-proof attestation",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai-trace",
+    "attestation",
+    "audit",
+    "llm",
+    "openai",
+    "claude",
+    "tamper-proof",
+    "merkle-tree"
+  ],
+  "author": "AI-Trace Team",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ai-trace/sdk-javascript.git"
+  },
+  "homepage": "https://aitrace.cc",
+  "bugs": {
+    "url": "https://github.com/ai-trace/sdk-javascript/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.55.0",
+    "msw": "^2.0.11",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

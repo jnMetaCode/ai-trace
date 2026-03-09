@@ -1,0 +1,188 @@
+{
+  "contractName": "AITraceRegistry",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        { "indexed": true, "internalType": "bytes32", "name": "certId", "type": "bytes32" },
+        { "indexed": true, "internalType": "bytes32", "name": "merkleRoot", "type": "bytes32" },
+        { "indexed": false, "internalType": "bytes32", "name": "fingerprintHash", "type": "bytes32" },
+        { "indexed": true, "internalType": "address", "name": "submitter", "type": "address" },
+        { "indexed": false, "internalType": "string", "name": "modelId", "type": "string" },
+        { "indexed": false, "internalType": "string", "name": "tenantId", "type": "string" },
+        { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+      ],
+      "name": "AttestationCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        { "indexed": true, "internalType": "bytes32", "name": "certId", "type": "bytes32" },
+        { "indexed": true, "internalType": "address", "name": "revoker", "type": "address" },
+        { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+      ],
+      "name": "AttestationRevoked",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        { "indexed": true, "internalType": "address", "name": "submitter", "type": "address" },
+        { "indexed": false, "internalType": "bool", "name": "authorized", "type": "bool" }
+      ],
+      "name": "SubmitterAuthorizationChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        { "indexed": true, "internalType": "bytes32", "name": "tenantIdHash", "type": "bytes32" },
+        { "indexed": true, "internalType": "address", "name": "owner", "type": "address" },
+        { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+      ],
+      "name": "TenantRegistered",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        { "internalType": "bytes32", "name": "certId", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "merkleRoot", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "fingerprintHash", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "inputHash", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "outputHash", "type": "bytes32" },
+        { "internalType": "string", "name": "modelId", "type": "string" },
+        { "internalType": "string", "name": "tenantId", "type": "string" }
+      ],
+      "name": "createAttestation",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "bytes32", "name": "certHash", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "rootHash", "type": "bytes32" },
+        { "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+      ],
+      "name": "anchor",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "bytes32[]", "name": "certIds", "type": "bytes32[]" },
+        { "internalType": "bytes32[]", "name": "merkleRoots", "type": "bytes32[]" },
+        { "internalType": "bytes32[]", "name": "fingerprintHashes", "type": "bytes32[]" }
+      ],
+      "name": "batchCreateAttestations",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "bytes32", "name": "certId", "type": "bytes32" }],
+      "name": "revokeAttestation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "bytes32", "name": "certId", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "merkleRoot", "type": "bytes32" }
+      ],
+      "name": "verifyAttestation",
+      "outputs": [{ "internalType": "bool", "name": "valid", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "bytes32", "name": "certId", "type": "bytes32" },
+        { "internalType": "bytes32", "name": "fingerprintHash", "type": "bytes32" }
+      ],
+      "name": "verifyFingerprint",
+      "outputs": [{ "internalType": "bool", "name": "valid", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "bytes32", "name": "certId", "type": "bytes32" }],
+      "name": "attestationExists",
+      "outputs": [{ "internalType": "bool", "name": "exists", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "bytes32", "name": "certId", "type": "bytes32" }],
+      "name": "getAttestation",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "bytes32", "name": "certId", "type": "bytes32" },
+            { "internalType": "bytes32", "name": "merkleRoot", "type": "bytes32" },
+            { "internalType": "bytes32", "name": "fingerprintHash", "type": "bytes32" },
+            { "internalType": "bytes32", "name": "inputHash", "type": "bytes32" },
+            { "internalType": "bytes32", "name": "outputHash", "type": "bytes32" },
+            { "internalType": "address", "name": "submitter", "type": "address" },
+            { "internalType": "uint256", "name": "timestamp", "type": "uint256" },
+            { "internalType": "uint256", "name": "blockNumber", "type": "uint256" },
+            { "internalType": "string", "name": "modelId", "type": "string" },
+            { "internalType": "string", "name": "tenantId", "type": "string" },
+            { "internalType": "bool", "name": "isValid", "type": "bool" }
+          ],
+          "internalType": "struct AITraceRegistry.AttestationRecord",
+          "name": "record",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "address", "name": "submitter", "type": "address" },
+        { "internalType": "bool", "name": "authorized", "type": "bool" }
+      ],
+      "name": "setAuthorizedSubmitter",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "string", "name": "tenantId", "type": "string" }],
+      "name": "registerTenant",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalAttestations",
+      "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "name": "authorizedSubmitters",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

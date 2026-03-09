@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-trace-server
+  namespace: ai-trace
+  labels:
+    app.kubernetes.io/name: ai-trace-server
+    app.kubernetes.io/part-of: ai-trace
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-trace-server
+  template:
+    metadata:
+      labels:
+        app: ai-trace-server
+    spec:
+      containers:
+        - name: server
+          image: ai-trace/server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: SERVER_MODE
+              value: "release"
+            - name: DATABASE_HOST
+              value: "postgres-service"
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USER
+              value: "ai_trace"
+            - name: DATABASE_NAME
+              value: "ai_trace"
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ai-trace-secrets
+                  key: POSTGRES_PASSWORD
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ai-trace-secrets
+                  key: REDIS_PASSWORD
+            - name: MINIO_ENDPOINT
+              value: "minio-service:9000"
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ai-trace-secrets
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ai-trace-secrets
+                  key: MINIO_SECRET_KEY
+            - name: MINIO_BUCKET
+              value: "ai-trace-certs"
+            - name: AI_TRACE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ai-trace-secrets
+                  key: AI_TRACE_API_KEY
+            - name: ED25519_SEED
+              valueFrom:
+                secretKeyRef:
+                  name: ai-trace-secrets
+                  key: ED25519_SEED
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: ai-trace-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-trace-service
+  namespace: ai-trace
+spec:
+  selector:
+    app: ai-trace-server
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-trace-hpa
+  namespace: ai-trace
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-trace-server
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

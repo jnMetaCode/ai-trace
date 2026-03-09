@@ -1,0 +1,48 @@
+# Prometheus 配置 - AI-Trace 联邦节点监控
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus 自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # AI-Trace 联邦节点
+  - job_name: 'ai-trace-federation'
+    static_configs:
+      - targets:
+          - 'node1:8006'
+          - 'node2:8006'
+          - 'node3:8006'
+    metrics_path: '/metrics'
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+):.*'
+        target_label: node
+        replacement: '${1}'
+
+  # PostgreSQL (如果启用 postgres_exporter)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Redis (如果启用 redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # MinIO
+  - job_name: 'minio'
+    static_configs:
+      - targets: ['minio:9000']
+    metrics_path: '/minio/v2/metrics/cluster'

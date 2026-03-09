@@ -1,0 +1,49 @@
+# AI-Trace Simple Mode - Single Container, Zero Dependencies
+# Usage: docker compose -f docker-compose.simple.yml up -d
+#
+# This mode uses SQLite for storage - perfect for:
+# - Development and testing
+# - Small deployments (< 10K events/day)
+# - Quick evaluation
+
+services:
+  ai-trace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-trace:simple
+    container_name: ai-trace-simple
+    ports:
+      - "8006:8006"
+    environment:
+      # Use SQLite mode
+      - AI_TRACE_MODE=simple
+      - AI_TRACE_DB_PATH=/data/ai-trace.db
+      # Server config
+      - AI_TRACE_PORT=8006
+      # Default API key for testing (change in production!)
+      - AI_TRACE_DEFAULT_API_KEY=test-api-key-12345
+    volumes:
+      - ai-trace-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  ai-trace-data:
+
+# Quick start:
+#   docker compose -f docker-compose.simple.yml up -d
+#
+# Test it:
+#   curl http://localhost:8006/health
+#
+# Make a traced API call:
+#   curl -X POST http://localhost:8006/api/v1/chat/completions \
+#     -H "X-API-Key: test-api-key-12345" \
+#     -H "X-Upstream-API-Key: sk-your-openai-key" \
+#     -H "Content-Type: application/json" \
+#     -d '{"model":"gpt-4","messages":[{"role":"user","content":"Hello!"}]}'

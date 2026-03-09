@@ -1,0 +1,81 @@
+# AI-Trace 独立联邦节点配置
+# 用于加入已有的联邦网络
+
+server:
+  port: 8006
+  mode: release
+
+database:
+  host: localhost        # 修改为你的数据库地址
+  port: 5432
+  user: postgres
+  password: your-password
+  dbname: ai_trace
+  sslmode: disable
+
+redis:
+  host: localhost        # 修改为你的 Redis 地址
+  port: 6379
+  password: ""
+  db: 0
+
+minio:
+  endpoint: localhost:9000  # 修改为你的 MinIO 地址
+  access_key: minioadmin
+  secret_key: minioadmin
+  bucket: ai-trace
+  use_ssl: false
+
+gateway:
+  openai:
+    base_url: https://api.openai.com/v1
+    api_key: ""
+  ollama:
+    base_url: http://localhost:11434
+  timeout: 120
+  max_retries: 3
+
+auth:
+  api_keys:
+    - your-api-key-here   # 修改为你的 API Key
+
+# ============================================
+# 功能开关
+# ============================================
+features:
+  blockchain_anchor: false
+  federated_nodes: true   # 启用联邦节点
+  metrics: true
+  reports: true
+
+# ============================================
+# 联邦配置 - 加入已有网络
+# ============================================
+anchor:
+  ethereum:
+    enabled: false
+
+  federated:
+    enabled: true
+    nodes:
+      # 已有联邦节点的地址
+      # 请替换为实际的节点地址
+      - https://node1.ai-trace.example.com
+      - https://node2.company-b.com:8443
+      - https://node3.audit-firm.com:8443
+    min_confirmations: 2
+
+# ============================================
+# 高级配置（可选）
+# ============================================
+
+# 节点密钥（不配置则自动生成）
+# node:
+#   private_key_file: /path/to/node.key
+#   public_key_file: /path/to/node.pub
+
+# TLS 配置（生产环境建议启用）
+# tls:
+#   enabled: true
+#   cert_file: /path/to/cert.pem
+#   key_file: /path/to/key.pem

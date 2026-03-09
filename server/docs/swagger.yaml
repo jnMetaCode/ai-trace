@@ -1,0 +1,1909 @@
+basePath: /api/v1
+definitions:
+  anchor.FederatedAnchorRequest:
+    properties:
+      cert_id:
+        type: string
+      origin_node:
+        type: string
+      root_hash:
+        type: string
+      signature:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  anchor.FederatedAnchorResponse:
+    properties:
+      accepted:
+        type: boolean
+      anchor_id:
+        type: string
+      error:
+        type: string
+      node_id:
+        type: string
+      signature:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  api.CommitCertRequest:
+    description: 生成存证证书的请求体
+    properties:
+      evidence_level:
+        description: 存证级别：internal/compliance/legal（或旧格式 L1/L2/L3）
+        example: internal
+        type: string
+      trace_id:
+        description: 追踪 ID
+        example: trc_abc123
+        type: string
+    required:
+    - trace_id
+    type: object
+  api.DecryptAuditLog:
+    properties:
+      audit_log_id:
+        type: string
+      client_ip:
+        type: string
+      decrypted_at:
+        type: string
+      fail_reason:
+        type: string
+      success:
+        type: boolean
+      tenant_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  api.DecryptAuditLogsResponse:
+    properties:
+      encrypted_ref:
+        type: string
+      logs:
+        items:
+          $ref: '#/definitions/api.DecryptAuditLog'
+        type: array
+      total_count:
+        type: integer
+    type: object
+  api.DecryptRequest:
+    properties:
+      content_type:
+        description: prompt 或 output
+        type: string
+      encrypted_ref:
+        description: 加密内容引用
+        type: string
+      trace_id:
+        description: 可选的 trace_id
+        type: string
+    required:
+    - content_type
+    - encrypted_ref
+    type: object
+  api.DecryptResponse:
+    properties:
+      audit_log_id:
+        description: 审计日志 ID
+        type: string
+      content:
+        description: 解密后的内容
+        type: string
+      content_type:
+        description: 内容类型
+        type: string
+      decrypted_at:
+        description: 解密时间
+        type: string
+    type: object
+  api.DependencyStatus:
+    properties:
+      last_check:
+        type: string
+      latency:
+        type: string
+      message:
+        type: string
+      status:
+        $ref: '#/definitions/api.HealthStatus'
+    type: object
+  api.FingerprintCompareDetails:
+    properties:
+      semantic_similarity:
+        type: number
+      statistical_similarity:
+        type: number
+      token_prob_similarity:
+        type: number
+    type: object
+  api.FingerprintCompareRequest:
+    properties:
+      trace_id_1:
+        type: string
+      trace_id_2:
+        type: string
+    required:
+    - trace_id_1
+    - trace_id_2
+    type: object
+  api.FingerprintCompareResponse:
+    properties:
+      conclusion:
+        type: string
+      details:
+        $ref: '#/definitions/api.FingerprintCompareDetails'
+      similarity:
+        type: number
+      trace_id_1:
+        type: string
+      trace_id_2:
+        type: string
+    type: object
+  api.FingerprintResponse:
+    properties:
+      fingerprint_hash:
+        type: string
+      fingerprint_id:
+        type: string
+      generated_at:
+        type: string
+      model_id:
+        type: string
+      model_provider:
+        type: string
+      semantic: {}
+      statistical: {}
+      token_probs: {}
+      trace_id:
+        type: string
+    type: object
+  api.FingerprintVerifyRequest:
+    properties:
+      fingerprint_hash:
+        type: string
+      trace_id:
+        type: string
+    required:
+    - trace_id
+    type: object
+  api.FingerprintVerifyResponse:
+    properties:
+      message:
+        type: string
+      trace_id:
+        type: string
+      valid:
+        type: boolean
+      verified:
+        type: boolean
+    type: object
+  api.GenerateProofRequest:
+    description: 生成最小披露证明的请求体
+    properties:
+      disclose_events:
+        description: 要披露的事件索引（如 [0, 2]）
+        items:
+          type: integer
+        type: array
+      disclose_fields:
+        description: 要披露的字段（如 ["output_hash"]）
+        items:
+          type: string
+        type: array
+    type: object
+  api.GenerateReportRequest:
+    description: 生成审计报告的请求体
+    properties:
+      cert_ids:
+        description: 指定证书 ID 列表
+        items:
+          type: string
+        type: array
+      end_time:
+        description: 结束时间
+        example: "2024-12-31"
+        type: string
+      format:
+        description: '输出格式: json/html'
+        example: html
+        type: string
+      include_raw:
+        description: 是否包含原始数据
+        type: boolean
+      start_time:
+        description: 开始时间
+        example: "2024-01-01"
+        type: string
+      trace_ids:
+        description: 指定追踪 ID 列表
+        items:
+          type: string
+        type: array
+      type:
+        description: '报告类型: audit/compliance/summary'
+        example: audit
+        type: string
+    required:
+    - type
+    type: object
+  api.HealthResponse:
+    properties:
+      dependencies:
+        additionalProperties:
+          $ref: '#/definitions/api.DependencyStatus'
+        type: object
+      status:
+        $ref: '#/definitions/api.HealthStatus'
+      timestamp:
+        type: string
+      uptime:
+        type: string
+      version:
+        type: string
+    type: object
+  api.HealthStatus:
+    enum:
+    - healthy
+    - degraded
+    - unhealthy
+    type: string
+    x-enum-varnames:
+    - HealthStatusHealthy
+    - HealthStatusDegraded
+    - HealthStatusUnhealthy
+  api.IngestEventResult:
+    description: 单个事件的写入结果
+    properties:
+      error:
+        description: 错误信息（如有）
+        example: duplicate event_id
+        type: string
+      event_hash:
+        description: 事件哈希
+        example: sha256:abcd1234...
+        type: string
+      event_id:
+        description: 事件 ID
+        example: evt_abc123
+        type: string
+    type: object
+  api.IngestEventsRequest:
+    type: object
+  api.IngestEventsResponse:
+    description: 事件写入的响应结果
+    properties:
+      results:
+        description: 各事件的写入结果
+        items:
+          $ref: '#/definitions/api.IngestEventResult'
+        type: array
+      success:
+        description: 是否成功
+        example: true
+        type: boolean
+    type: object
+  api.NodeInfoResponse:
+    properties:
+      endpoints:
+        items:
+          type: string
+        type: array
+      features:
+        items:
+          type: string
+        type: array
+      node_id:
+        type: string
+      public_key:
+        type: string
+      version:
+        type: string
+    type: object
+  api.RegisterNodeRequest:
+    properties:
+      endpoint:
+        type: string
+      public_key:
+        type: string
+    required:
+    - endpoint
+    type: object
+  api.TrustNodeRequest:
+    properties:
+      node_id:
+        type: string
+      public_key:
+        type: string
+    required:
+    - node_id
+    - public_key
+    type: object
+  api.VerifyCertRequest:
+    description: 验证存证证书的请求体
+    properties:
+      cert_id:
+        description: 证书 ID
+        example: cert_abc123
+        type: string
+      root_hash:
+        description: Merkle 根哈希
+        example: sha256:abcd1234
+        type: string
+    type: object
+  cert.AnchorProof:
+    properties:
+      anchor_id:
+        type: string
+      anchor_timestamp:
+        type: string
+      anchor_type:
+        description: local, worm, blockchain
+        type: string
+      blockchain:
+        $ref: '#/definitions/cert.BlockchainProof'
+      object_key:
+        type: string
+      storage_provider:
+        type: string
+    type: object
+  cert.BlockchainProof:
+    properties:
+      block_height:
+        type: integer
+      chain_id:
+        type: string
+      contract_address:
+        type: string
+      tx_hash:
+        type: string
+    type: object
+  cert.CertMetadata:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      evidence_level:
+        $ref: '#/definitions/cert.EvidenceLevel'
+      public_key:
+        description: Ed25519公钥（用于验证签名）
+        type: string
+      tenant_id:
+        type: string
+    type: object
+  cert.Certificate:
+    properties:
+      anchor_proof:
+        allOf:
+        - $ref: '#/definitions/cert.AnchorProof'
+        description: 锚定证明
+      cert_id:
+        description: 存证标识
+        type: string
+      cert_version:
+        type: string
+      disclosure_policy:
+        allOf:
+        - $ref: '#/definitions/cert.DisclosurePolicy'
+        description: 披露策略
+      event_hashes:
+        description: 事件哈希列表
+        items:
+          type: string
+        type: array
+      merkle_tree:
+        allOf:
+        - $ref: '#/definitions/merkle.Tree'
+        description: Merkle树
+      metadata:
+        allOf:
+        - $ref: '#/definitions/cert.CertMetadata'
+        description: 元信息
+      root_hash:
+        type: string
+      schema_version:
+        type: string
+      time_proof:
+        allOf:
+        - $ref: '#/definitions/cert.TimeProof'
+        description: 时间证明
+      trace_id:
+        description: 关联的trace
+        type: string
+    type: object
+  cert.DisclosedEvent:
+    properties:
+      disclosed_fields:
+        additionalProperties: true
+        type: object
+      event_hash:
+        type: string
+      event_index:
+        type: integer
+      event_type:
+        type: string
+    type: object
+  cert.DisclosurePolicy:
+    properties:
+      allowed_fields:
+        items:
+          type: string
+        type: array
+      encrypted_fields:
+        items:
+          type: string
+        type: array
+      masked_fields:
+        items:
+          type: string
+        type: array
+      policy_id:
+        type: string
+    type: object
+  cert.EventMerkleProof:
+    properties:
+      event_hash:
+        type: string
+      event_index:
+        type: integer
+      proof_path:
+        items:
+          $ref: '#/definitions/merkle.ProofNode'
+        type: array
+    type: object
+  cert.EvidenceLevel:
+    enum:
+    - internal
+    - compliance
+    - legal
+    - internal
+    - compliance
+    - legal
+    type: string
+    x-enum-comments:
+      EvidenceLevelL1: Legacy L1 -> internal
+      EvidenceLevelL2: Legacy L2 -> compliance
+      EvidenceLevelL3: Legacy L3 -> legal
+    x-enum-descriptions:
+    - Legacy L1 -> internal
+    - Legacy L2 -> compliance
+    - Legacy L3 -> legal
+    - ""
+    - ""
+    - ""
+    x-enum-varnames:
+    - EvidenceLevelL1
+    - EvidenceLevelL2
+    - EvidenceLevelL3
+    - EvidenceLevelInternal
+    - EvidenceLevelCompliance
+    - EvidenceLevelLegal
+  cert.MinimalDisclosureProof:
+    properties:
+      anchor_proof:
+        allOf:
+        - $ref: '#/definitions/cert.AnchorProof'
+        description: 锚定证明
+      cert_id:
+        description: 证明目标
+        type: string
+      disclosed_events:
+        description: 披露的事件
+        items:
+          $ref: '#/definitions/cert.DisclosedEvent'
+        type: array
+      merkle_proofs:
+        description: Merkle证明
+        items:
+          $ref: '#/definitions/cert.EventMerkleProof'
+        type: array
+      root_hash:
+        type: string
+      schema_version:
+        type: string
+      time_proof:
+        allOf:
+        - $ref: '#/definitions/cert.TimeProof'
+        description: 时间证明
+      verification_instructions:
+        allOf:
+        - $ref: '#/definitions/cert.VerificationInstructions'
+        description: 验证指引
+    type: object
+  cert.TimeProof:
+    properties:
+      proof_type:
+        description: local, ntp, tsa
+        type: string
+      signature:
+        type: string
+      timestamp:
+        type: string
+      tsa_authority:
+        type: string
+      tsa_cert_chain:
+        items:
+          type: string
+        type: array
+      tsa_token:
+        type: string
+    type: object
+  cert.VerificationInstructions:
+    properties:
+      verifier_url:
+        type: string
+      verify_command:
+        type: string
+    type: object
+  event.EventContext:
+    properties:
+      business_id:
+        type: string
+      business_type:
+        type: string
+      client_ip:
+        type: string
+      client_type:
+        type: string
+      department:
+        type: string
+    type: object
+  event.EventType:
+    enum:
+    - INPUT
+    - MODEL
+    - RETRIEVAL
+    - TOOL_CALL
+    - CHUNK
+    - OUTPUT
+    - POST_EDIT
+    type: string
+    x-enum-comments:
+      EventTypeChunk: 流式chunk事件
+    x-enum-descriptions:
+    - ""
+    - ""
+    - ""
+    - ""
+    - 流式chunk事件
+    - ""
+    - ""
+    x-enum-varnames:
+    - EventTypeInput
+    - EventTypeModel
+    - EventTypeRetrieval
+    - EventTypeToolCall
+    - EventTypeChunk
+    - EventTypeOutput
+    - EventTypePostEdit
+  gateway.ChatCompletionRequest:
+    properties:
+      max_tokens:
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/gateway.ChatMessage'
+        type: array
+      model:
+        type: string
+      seed:
+        type: integer
+      stream:
+        type: boolean
+      temperature:
+        type: number
+      top_p:
+        type: number
+    type: object
+  gateway.ChatCompletionResponse:
+    properties:
+      choices:
+        items:
+          $ref: '#/definitions/gateway.Choice'
+        type: array
+      created:
+        type: integer
+      id:
+        type: string
+      model:
+        type: string
+      object:
+        type: string
+      usage:
+        $ref: '#/definitions/gateway.Usage'
+    type: object
+  gateway.ChatMessage:
+    properties:
+      content:
+        type: string
+      role:
+        type: string
+    type: object
+  gateway.Choice:
+    properties:
+      finish_reason:
+        type: string
+      index:
+        type: integer
+      message:
+        $ref: '#/definitions/gateway.ChatMessage'
+    type: object
+  gateway.Usage:
+    properties:
+      completion_tokens:
+        type: integer
+      prompt_tokens:
+        type: integer
+      total_tokens:
+        type: integer
+    type: object
+  merkle.ProofNode:
+    properties:
+      hash:
+        type: string
+      position:
+        description: '"left" or "right"'
+        type: string
+    type: object
+  merkle.Tree:
+    properties:
+      algorithm:
+        type: string
+      leaves:
+        items:
+          type: string
+        type: array
+      nodes:
+        items:
+          items:
+            type: string
+          type: array
+        type: array
+      root:
+        type: string
+    type: object
+  report.CertDetail:
+    properties:
+      cert_id:
+        type: string
+      created_at:
+        type: string
+      evidence_level:
+        type: string
+      root_hash:
+        type: string
+      trace_id:
+        type: string
+      verified:
+        type: boolean
+    type: object
+  report.Details:
+    properties:
+      certificates:
+        items:
+          $ref: '#/definitions/report.CertDetail'
+        type: array
+      traces:
+        items:
+          $ref: '#/definitions/report.TraceDetail'
+        type: array
+      verifications:
+        items:
+          $ref: '#/definitions/report.Verification'
+        type: array
+    type: object
+  report.Report:
+    properties:
+      content_type:
+        type: string
+      details:
+        $ref: '#/definitions/report.Details'
+      format:
+        $ref: '#/definitions/report.ReportFormat'
+      generated_at:
+        type: string
+      id:
+        type: string
+      summary:
+        $ref: '#/definitions/report.Summary'
+      tenant_id:
+        type: string
+      type:
+        $ref: '#/definitions/report.ReportType'
+    type: object
+  report.ReportFormat:
+    enum:
+    - json
+    - html
+    - pdf
+    type: string
+    x-enum-comments:
+      ReportFormatPDF: 需要额外依赖
+    x-enum-descriptions:
+    - ""
+    - ""
+    - 需要额外依赖
+    x-enum-varnames:
+    - ReportFormatJSON
+    - ReportFormatHTML
+    - ReportFormatPDF
+  report.ReportType:
+    enum:
+    - audit
+    - compliance
+    - summary
+    type: string
+    x-enum-comments:
+      ReportTypeAudit: 审计报告
+      ReportTypeCompliance: 合规报告
+      ReportTypeSummary: 摘要报告
+    x-enum-descriptions:
+    - 审计报告
+    - 合规报告
+    - 摘要报告
+    x-enum-varnames:
+    - ReportTypeAudit
+    - ReportTypeCompliance
+    - ReportTypeSummary
+  report.Summary:
+    properties:
+      certs_by_level:
+        additionalProperties:
+          type: integer
+        type: object
+      events_by_type:
+        additionalProperties:
+          type: integer
+        type: object
+      time_range:
+        $ref: '#/definitions/report.TimeRange'
+      token_usage:
+        $ref: '#/definitions/report.TokenUsage'
+      total_certificates:
+        type: integer
+      total_events:
+        type: integer
+      total_traces:
+        type: integer
+    type: object
+  report.TimeRange:
+    properties:
+      end:
+        type: string
+      start:
+        type: string
+    type: object
+  report.TokenUsage:
+    properties:
+      total_completion_tokens:
+        type: integer
+      total_prompt_tokens:
+        type: integer
+      total_tokens:
+        type: integer
+    type: object
+  report.TraceDetail:
+    properties:
+      cert_id:
+        type: string
+      duration:
+        type: string
+      end_time:
+        type: string
+      event_count:
+        type: integer
+      has_cert:
+        type: boolean
+      start_time:
+        type: string
+      trace_id:
+        type: string
+    type: object
+  report.Verification:
+    properties:
+      anchor_verified:
+        type: boolean
+      cert_id:
+        type: string
+      hash_integrity:
+        type: boolean
+      overall_valid:
+        type: boolean
+      signature_valid:
+        type: boolean
+      verified_at:
+        type: string
+    type: object
+host: localhost:8006
+info:
+  contact:
+    email: support@aitrace.cc
+    name: AI-Trace Support
+    url: https://aitrace.cc/support
+  description: |-
+    AI-Trace - Enterprise AI Decision Audit & Compliance Platform
+
+    AI-Trace 提供零代码侵入的 AI 调用追踪、存证和审计能力。
+    支持 OpenAI、Claude、Ollama 等多种模型，用户可透传自己的 API Key，服务不存储任何敏感信息。
+
+    ## 特性
+    - **零侵入集成**: 只需替换 API endpoint，无需修改代码
+    - **API Key 透传**: 用户的 API Key 直接透传到上游，不存储
+    - **自定义代理**: 支持用户指定自己的代理服务器
+    - **多级存证**: internal(内部审计) / compliance(合规) / legal(法律效力)
+    - **最小披露**: 基于 Merkle 树的选择性披露证明
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://aitrace.cc/terms
+  title: AI-Trace API
+  version: 0.2.0
+paths:
+  /certs/{cert_id}:
+    get:
+      description: 根据证书 ID 获取存证证书的完整信息
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 证书 ID
+        in: path
+        name: cert_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 证书详情
+          schema:
+            $ref: '#/definitions/cert.Certificate'
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 证书不存在
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取存证证书详情
+      tags:
+      - Certificates
+  /certs/{cert_id}/prove:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        生成只包含必要信息的证明，支持选择性披露
+
+        ## 使用场景
+        - 向第三方证明 AI 决策过程，而不暴露完整对话内容
+        - 选择性披露特定事件和字段
+        - 生成可独立验证的 Merkle 证明
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 证书 ID
+        in: path
+        name: cert_id
+        required: true
+        type: string
+      - description: 证明请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GenerateProofRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 最小披露证明
+          schema:
+            $ref: '#/definitions/cert.MinimalDisclosureProof'
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 证书不存在
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 生成最小披露证明
+      tags:
+      - Certificates
+  /certs/commit:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        为指定的追踪生成存证证书，支持多级存证
+
+        ## 存证级别
+        - **internal** (L1): Ed25519 签名，适合内部审计
+        - **compliance** (L2): WORM 存储 + TSA 时间戳，适合合规要求
+        - **legal** (L3): 区块链锚定，适合法律效力要求
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 存证请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CommitCertRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 存证证书信息
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 追踪不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 生成存证证书
+      tags:
+      - Certificates
+  /certs/search:
+    get:
+      description: 获取当前租户的存证证书列表
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量（最大100）
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 证书列表
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 搜索存证证书
+      tags:
+      - Certificates
+  /certs/verify:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        验证存证证书的完整性和有效性
+
+        ## 验证项目
+        - **hash_integrity**: 事件哈希与 Merkle 根匹配
+        - **signature**: Ed25519 数字签名验证
+        - **time_proof**: 时间证明验证
+        - **anchor_proof**: 锚定证明验证（WORM/区块链）
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 验证请求（cert_id 或 root_hash 二选一）
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.VerifyCertRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 验证结果
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 证书不存在
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 验证存证证书
+      tags:
+      - Certificates
+  /chat/completions:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        代理 OpenAI/Claude/Ollama 聊天完成请求，同时记录追踪事件
+
+        ## API Key 透传
+        用户的 API Key 通过以下方式传递，**不会被存储**：
+        - `X-Upstream-API-Key` header（推荐）
+        - `Authorization: Bearer sk-...` header（兼容模式）
+
+        ## 自定义代理
+        可通过 `X-Upstream-Base-URL` 指定自己的代理服务器，避免 IP 封禁风险
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 上游 API Key（OpenAI/Claude，透传不存储）
+        in: header
+        name: X-Upstream-API-Key
+        type: string
+      - description: 自定义上游代理 URL
+        in: header
+        name: X-Upstream-Base-URL
+        type: string
+      - description: 追踪 ID（可选，自动生成）
+        in: header
+        name: X-Trace-ID
+        type: string
+      - description: 会话 ID
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: 业务 ID
+        in: header
+        name: X-Business-ID
+        type: string
+      - description: 聊天请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gateway.ChatCompletionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 聊天响应
+          headers:
+            X-Latency-Ms:
+              description: 延迟毫秒数
+              type: string
+            X-Trace-ID:
+              description: 追踪 ID
+              type: string
+          schema:
+            $ref: '#/definitions/gateway.ChatCompletionResponse'
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 聊天完成（OpenAI 兼容）
+      tags:
+      - Gateway
+  /chat/completions/stream:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        代理 LLM 流式请求，每个 chunk 实时存证并返回
+
+        ## 流式存证特性
+        - 每个 chunk 生成独立的 CHUNK 事件
+        - 累积哈希保证完整性（任意 chunk 被篡改可检测）
+        - 实时返回 chunk 内容和存证信息
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 上游 API Key（OpenAI/Claude，透传不存储）
+        in: header
+        name: X-Upstream-API-Key
+        type: string
+      - description: 自定义上游代理 URL
+        in: header
+        name: X-Upstream-Base-URL
+        type: string
+      - description: 追踪 ID（可选，自动生成）
+        in: header
+        name: X-Trace-ID
+        type: string
+      - description: 会话 ID
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: 业务 ID
+        in: header
+        name: X-Business-ID
+        type: string
+      - description: 聊天请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gateway.ChatCompletionRequest'
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: SSE stream
+          headers:
+            X-Trace-ID:
+              description: 追踪 ID
+              type: string
+          schema:
+            type: string
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 流式聊天完成（SSE）
+      tags:
+      - Gateway
+  /decrypt:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        解密已加密存储的 prompt 或 output 内容
+
+        ## 权限要求
+        - 只有内容所有者或授权方可解密
+        - 所有解密操作会被记录到审计日志
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 解密请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.DecryptRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解密结果
+          schema:
+            $ref: '#/definitions/api.DecryptResponse'
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 内容未找到
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 解密内容
+      tags:
+      - Decrypt
+  /decrypt/audit:
+    get:
+      description: 获取指定内容的解密审计历史
+      parameters:
+      - description: 加密内容引用
+        in: query
+        name: encrypted_ref
+        required: true
+        type: string
+      - default: 20
+        description: 返回数量限制
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 审计日志
+          schema:
+            $ref: '#/definitions/api.DecryptAuditLogsResponse'
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取解密审计日志
+      tags:
+      - Decrypt
+  /events/{event_id}:
+    get:
+      description: 根据事件 ID 获取单个事件的详细信息
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 事件 ID
+        in: path
+        name: event_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 事件详情
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 事件不存在
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取事件详情
+      tags:
+      - Events
+  /events/ingest:
+    post:
+      consumes:
+      - application/json
+      description: 将事件批量写入追踪系统，用于 SDK 直接上报场景
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 租户 ID
+        in: header
+        name: X-Tenant-ID
+        type: string
+      - description: 事件列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.IngestEventsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 写入结果
+          schema:
+            $ref: '#/definitions/api.IngestEventsResponse'
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 批量写入事件
+      tags:
+      - Events
+  /events/search:
+    get:
+      description: 根据条件搜索追踪事件
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 追踪 ID
+        in: query
+        name: trace_id
+        type: string
+      - description: 事件类型（INPUT/MODEL/OUTPUT）
+        in: query
+        name: event_type
+        type: string
+      - description: 开始时间（RFC3339 格式）
+        in: query
+        name: start_time
+        type: string
+      - description: 结束时间（RFC3339 格式）
+        in: query
+        name: end_time
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 事件列表
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 搜索事件
+      tags:
+      - Events
+  /federated/confirm:
+    post:
+      consumes:
+      - application/json
+      description: 接收来自其他联邦节点的锚定确认请求
+      parameters:
+      - description: 锚定请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/anchor.FederatedAnchorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 确认响应
+          schema:
+            $ref: '#/definitions/anchor.FederatedAnchorResponse'
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: 联邦功能未启用
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 联邦确认请求
+      tags:
+      - Federation
+  /federated/node/info:
+    get:
+      description: 获取当前联邦节点的信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 节点信息
+          schema:
+            $ref: '#/definitions/api.NodeInfoResponse'
+      summary: 获取节点信息
+      tags:
+      - Federation
+  /federated/nodes:
+    get:
+      description: 获取已知的联邦节点列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 节点列表
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 列出联邦节点
+      tags:
+      - Federation
+  /federated/nodes/register:
+    post:
+      consumes:
+      - application/json
+      description: 向本节点注册一个新的联邦节点
+      parameters:
+      - description: 节点信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.RegisterNodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 注册结果
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 注册联邦节点
+      tags:
+      - Federation
+  /federated/nodes/trust:
+    post:
+      consumes:
+      - application/json
+      description: 将一个联邦节点添加到信任列表，启用签名验证
+      parameters:
+      - description: 节点信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.TrustNodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 操作结果
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 信任联邦节点
+      tags:
+      - Federation
+  /federated/nodes/trust/{node_id}:
+    delete:
+      description: 从信任列表移除一个联邦节点
+      parameters:
+      - description: 节点 ID
+        in: path
+        name: node_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 操作结果
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 取消信任联邦节点
+      tags:
+      - Federation
+  /federated/nodes/trusted:
+    get:
+      description: 获取已信任的联邦节点列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 信任节点列表
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 列出信任的联邦节点
+      tags:
+      - Federation
+  /federated/verify/{anchor_id}:
+    get:
+      description: 验证指定的联邦锚定是否存在且有效
+      parameters:
+      - description: 锚定 ID
+        in: path
+        name: anchor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 验证结果
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 锚定不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 验证联邦锚定
+      tags:
+      - Federation
+  /fingerprints/{trace_id}:
+    get:
+      description: 获取指定 trace_id 的完整 4 层推理行为指纹
+      parameters:
+      - description: 追踪 ID
+        in: path
+        name: trace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 指纹数据
+          schema:
+            $ref: '#/definitions/api.FingerprintResponse'
+        "404":
+          description: 未找到
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取推理行为指纹
+      tags:
+      - Fingerprint
+  /fingerprints/compare:
+    post:
+      consumes:
+      - application/json
+      description: 比较两个 trace 的推理行为指纹相似度
+      parameters:
+      - description: 比较请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.FingerprintCompareRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 比较结果
+          schema:
+            $ref: '#/definitions/api.FingerprintCompareResponse'
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 指纹未找到
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 比较指纹相似度
+      tags:
+      - Fingerprint
+  /fingerprints/verify:
+    post:
+      consumes:
+      - application/json
+      description: 验证指定 trace 的指纹是否被篡改
+      parameters:
+      - description: 验证请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.FingerprintVerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 验证结果
+          schema:
+            $ref: '#/definitions/api.FingerprintVerifyResponse'
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 指纹未找到
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 验证指纹完整性
+      tags:
+      - Fingerprint
+  /getting-started:
+    get:
+      description: 返回 AI-Trace 快速入门指南，帮助新用户了解如何使用平台
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 快速入门指南
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 快速入门
+      tags:
+      - System
+  /health:
+    get:
+      description: 返回服务的健康状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 健康状态
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 健康检查
+      tags:
+      - System
+  /health/detailed:
+    get:
+      description: 返回服务及所有依赖服务的健康状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 详细健康状态
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+        "503":
+          description: 服务不健康
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+      summary: 详细健康检查
+      tags:
+      - System
+  /live:
+    get:
+      description: 检查服务是否存活
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 服务存活
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 存活检查
+      tags:
+      - System
+  /ready:
+    get:
+      description: 检查服务是否准备好接收流量
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 服务就绪
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: 服务未就绪
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 就绪检查
+      tags:
+      - System
+  /reports/generate:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        生成 AI 决策审计报告，支持多种类型和格式
+
+        ## 报告类型
+        - **audit**: 完整审计报告，包含所有追踪和证书详情
+        - **compliance**: 合规性报告，重点关注证书验证状态
+        - **summary**: 摘要报告，统计汇总信息
+
+        ## 输出格式
+        - **json**: JSON 格式，适合程序处理
+        - **html**: HTML 格式，适合直接查看和打印
+      parameters:
+      - description: AI-Trace 平台 API Key
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: 报告请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.GenerateReportRequest'
+      produces:
+      - application/json
+      - text/html
+      responses:
+        "200":
+          description: 报告信息
+          schema:
+            $ref: '#/definitions/report.Report'
+        "400":
+          description: 请求无效
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未授权
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务器错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 生成审计报告
+      tags:
+      - Reports
+securityDefinitions:
+  ApiKeyAuth:
+    description: AI-Trace 平台 API Key（用于认证）
+    in: header
+    name: X-API-Key
+    type: apiKey
+  UpstreamApiKey:
+    description: 用户的上游 API Key（OpenAI/Claude，透传不存储）
+    in: header
+    name: X-Upstream-API-Key
+    type: apiKey
+swagger: "2.0"

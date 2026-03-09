@@ -1,0 +1,187 @@
+version: '3.8'
+
+# AI-Trace 三节点联邦网络
+# 启动命令: docker-compose -f docker-compose.multi-node.yml up -d
+
+services:
+  # ============================================
+  # 共享基础设施
+  # ============================================
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-multi-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - federation
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - federation
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    networks:
+      - federation
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # 联邦节点 1 - 主节点
+  # ============================================
+
+  node1:
+    image: ai-trace-server:latest
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: ai-trace-node1
+    ports:
+      - "8006:8006"
+    environment:
+      - AI_TRACE_NODE_ID=node1
+    volumes:
+      - ./config-node1.yaml:/app/config.yaml:ro
+      - node1_keys:/app/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - federation
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # 联邦节点 2
+  # ============================================
+
+  node2:
+    image: ai-trace-server:latest
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: ai-trace-node2
+    ports:
+      - "8007:8006"
+    environment:
+      - AI_TRACE_NODE_ID=node2
+    volumes:
+      - ./config-node2.yaml:/app/config.yaml:ro
+      - node2_keys:/app/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      node1:
+        condition: service_healthy
+    networks:
+      - federation
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # 联邦节点 3
+  # ============================================
+
+  node3:
+    image: ai-trace-server:latest
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: ai-trace-node3
+    ports:
+      - "8008:8006"
+    environment:
+      - AI_TRACE_NODE_ID=node3
+    volumes:
+      - ./config-node3.yaml:/app/config.yaml:ro
+      - node3_keys:/app/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      node1:
+        condition: service_healthy
+    networks:
+      - federation
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # 监控（可选）
+  # ============================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - federation
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - federation
+    profiles:
+      - monitoring
+
+networks:
+  federation:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
+  node1_keys:
+  node2_keys:
+  node3_keys:
+  grafana_data:

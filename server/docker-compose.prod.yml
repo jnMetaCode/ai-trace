@@ -1,0 +1,209 @@
+# AI-Trace Production Deployment
+# Usage: docker compose -f docker-compose.prod.yml up -d
+#
+# Prerequisites:
+# 1. Create .env file with production secrets
+# 2. Configure SSL certificates (optional, recommended)
+# 3. Set up external database (recommended for production)
+
+version: "3.9"
+
+services:
+  # AI-Trace Server (Production)
+  ai-trace:
+    image: ghcr.io/ai-trace/ai-trace:latest
+    container_name: ai-trace-prod
+    ports:
+      - "8006:8006"
+    environment:
+      - AI_TRACE_SERVER_MODE=release
+      - AI_TRACE_DATABASE_HOST=${DB_HOST:-postgres}
+      - AI_TRACE_DATABASE_PORT=${DB_PORT:-5432}
+      - AI_TRACE_DATABASE_USER=${DB_USER:-postgres}
+      - AI_TRACE_DATABASE_PASSWORD=${DB_PASSWORD:?Database password required}
+      - AI_TRACE_DATABASE_DBNAME=${DB_NAME:-ai_trace}
+      - AI_TRACE_DATABASE_SSLMODE=${DB_SSLMODE:-require}
+      - AI_TRACE_REDIS_HOST=${REDIS_HOST:-redis}
+      - AI_TRACE_REDIS_PORT=${REDIS_PORT:-6379}
+      - AI_TRACE_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - AI_TRACE_MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio:9000}
+      - AI_TRACE_MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:?MinIO access key required}
+      - AI_TRACE_MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?MinIO secret key required}
+      - AI_TRACE_AUTH_JWT_SECRET=${JWT_SECRET:?JWT secret required}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./config.prod.yaml:/app/config.yaml:ro
+      - ai-trace-data:/app/data
+      - ai-trace-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    networks:
+      - ai-trace-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # PostgreSQL (Production - Consider using managed database)
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-trace-postgres-prod
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?Database password required}
+      - POSTGRES_DB=${DB_NAME:-ai_trace}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    # ports:
+    #   - "5432:5432"  # Uncomment for external access
+    restart: always
+    networks:
+      - ai-trace-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=512MB"
+      - "-c"
+      - "effective_cache_size=1536MB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-ai_trace}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Production)
+  redis:
+    image: redis:7-alpine
+    container_name: ai-trace-redis-prod
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    volumes:
+      - redis-data:/data
+    # ports:
+    #   - "6379:6379"  # Uncomment for external access
+    restart: always
+    networks:
+      - ai-trace-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 768M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (Production - Consider using S3/GCS in production)
+  minio:
+    image: minio/minio:latest
+    container_name: ai-trace-minio-prod
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:?MinIO access key required}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:?MinIO secret key required}
+    volumes:
+      - minio-data:/data
+    # ports:
+    #   - "9000:9000"  # Uncomment for external access
+    #   - "9001:9001"
+    restart: always
+    networks:
+      - ai-trace-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: ai-trace-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+    depends_on:
+      - ai-trace
+    restart: always
+    networks:
+      - ai-trace-network
+    profiles:
+      - with-nginx
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+  ai-trace-data:
+    driver: local
+  ai-trace-logs:
+    driver: local
+  nginx-cache:
+    driver: local
+
+networks:
+  ai-trace-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
